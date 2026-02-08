@@ -47,52 +47,6 @@ const darkColors = {
 	fabBackground: "#BD93F9",
 };
 
-// const darkColors = {
-// 	male: "#88C0D0", // soft blue
-// 	female: "#BF616A", // muted red
-// 	other: "#5E5E5E", // gray
-// 	parentChild: "#A3BE8C", // soft green
-// 	spouse: "#D08770", // soft orange
-// 	nodeBackground: "#2B2B2B",
-// 	nodeBorder: "#3C3C3C",
-// 	nodeSelected: "#A3BE8C",
-// 	background: "#1D1D1D",
-// 	cardBackground: "#2B2B2B",
-// 	textPrimary: "#E5E5E5",
-// 	textSecondary: "#888888",
-// 	accent: "#A3BE8C",
-// 	accentLight: "#C3D8B6",
-// 	danger: "#BF616A",
-// 	white: "#FFFFFF",
-// 	border: "#3C3C3C",
-// 	shadow: "#000000",
-// 	canvasBackground: "#1D1D1D",
-// 	fabBackground: "#A3BE8C",
-// };
-
-// const darkColors = {
-// 	male: "#66D9EF",
-// 	female: "#F92672",
-// 	other: "#75715E",
-// 	parentChild: "#A6E22E",
-// 	spouse: "#FD971F",
-// 	nodeBackground: "#3E3D32",
-// 	nodeBorder: "#49483E",
-// 	nodeSelected: "#A6E22E",
-// 	background: "#272822",
-// 	cardBackground: "#3E3D32",
-// 	textPrimary: "#F8F8F2",
-// 	textSecondary: "#75715E",
-// 	accent: "#A6E22E",
-// 	accentLight: "#A6E22E",
-// 	danger: "#F92672",
-// 	white: "#FFFFFF",
-// 	border: "#49483E",
-// 	shadow: "#000000",
-// 	canvasBackground: "#272822",
-// 	fabBackground: "#A6E22E",
-// };
-
 export type Colors = typeof lightColors;
 
 export function getColors(mode: "light" | "dark") {

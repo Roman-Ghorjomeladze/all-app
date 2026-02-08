@@ -11,15 +11,15 @@ import LinguaFlipNavigator from "../screens/modules/LinguaFlip/LinguaFlipNavigat
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-const MonokaiNavTheme: Theme = {
+const PurpleDarkNavTheme: Theme = {
 	dark: true,
 	colors: {
-		primary: "#A6E22E",
-		background: "#272822",
-		card: "#3E3D32",
-		text: "#F8F8F2",
-		border: "#49483E",
-		notification: "#F92672",
+		primary: "#BD93F9",
+		background: "#1E1E2E",
+		card: "#2A273F",
+		text: "#D9E0EE",
+		border: "#3A375C",
+		notification: "#FF79C6",
 	},
 	fonts: DarkTheme.fonts,
 };
@@ -28,7 +28,7 @@ export default function RootNavigator() {
 	const { mode } = useThemeMode();
 
 	return (
-		<NavigationContainer theme={mode === "dark" ? MonokaiNavTheme : DefaultTheme}>
+		<NavigationContainer theme={mode === "dark" ? PurpleDarkNavTheme : DefaultTheme}>
 			<Stack.Navigator
 				initialRouteName="Home"
 				screenOptions={{

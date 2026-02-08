@@ -18,18 +18,18 @@ const lightColors = {
 };
 
 const darkColors = {
-	period: "#F92672",
+	period: "#FF79C6",
 	fertile: "#A6E22E",
-	ovulation: "#66D9EF",
-	regular: "#49483E",
-	background: "#272822",
-	cardBackground: "#3E3D32",
-	textPrimary: "#F8F8F2",
-	textSecondary: "#75715E",
-	tabActive: "#F92672",
-	tabInactive: "#75715E",
+	ovulation: "#8BE9FD",
+	regular: "#3A375C",
+	background: "#1E1E2E",
+	cardBackground: "#2A273F",
+	textPrimary: "#D9E0EE",
+	textSecondary: "#6C6F93",
+	tabActive: "#FF79C6",
+	tabInactive: "#6C6F93",
 	white: "#FFFFFF",
-	border: "#49483E",
+	border: "#3A375C",
 	shadow: "#000000",
 };
 
@@ -64,4 +64,5 @@ export const typography = {
 	footnote: { fontSize: 13, fontWeight: "400" as const },
 	caption1: { fontSize: 12, fontWeight: "400" as const },
 	caption2: { fontSize: 11, fontWeight: "400" as const },
+	caption3: { fontSize: 9, fontWeight: "400" as const },
 };

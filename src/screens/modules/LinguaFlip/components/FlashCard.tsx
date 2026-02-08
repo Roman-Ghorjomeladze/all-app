@@ -39,7 +39,7 @@ function useStyles(colors: Colors) {
 			position: "absolute",
 		},
 		cardBack: {
-			backgroundColor: colors.accentLight + "15",
+			backgroundColor: colors.cardBackground,
 		},
 		masteryRow: {
 			position: "absolute",
@@ -107,14 +107,6 @@ export default function FlashCard({ frontText, backText, mastery, showBothSides,
 	const styles = useStyles(colors);
 	const flipAnim = useRef(new Animated.Value(0)).current;
 	const isFlippedRef = useRef(false);
-	const lastTextRef = useRef({ front: frontText, back: backText });
-
-	// Check if card content changed - if so, reset flip state synchronously
-	if (lastTextRef.current.front !== frontText || lastTextRef.current.back !== backText) {
-		flipAnim.setValue(0);
-		isFlippedRef.current = false;
-		lastTextRef.current = { front: frontText, back: backText };
-	}
 
 	const handleFlip = () => {
 		if (showBothSides) return;

@@ -29,171 +29,175 @@ import EditCycleModal from "./components/EditCycleModal";
 import HoldToDeleteButton from "./components/HoldToDeleteButton";
 
 function useStyles(colors: Colors) {
-	return useMemo(() => StyleSheet.create({
-		container: {
-			flex: 1,
-			backgroundColor: colors.background,
-		},
-		scrollContent: {
-			paddingBottom: spacing.xl * 2,
-		},
-		loadingContainer: {
-			flex: 1,
-			justifyContent: "center",
-			alignItems: "center",
-		},
-		loadingText: {
-			...typography.body,
-			color: colors.textSecondary,
-		},
-		header: {
-			flexDirection: "row",
-			alignItems: "center",
-			justifyContent: "space-between",
-			paddingTop: spacing.lg,
-			paddingBottom: spacing.md,
-			paddingHorizontal: spacing.lg,
-		},
-		headerSpacer: {
-			width: 40,
-		},
-		title: {
-			...typography.title2,
-			color: colors.textPrimary,
-		},
-		gearButton: {
-			width: 40,
-			height: 40,
-			borderRadius: 20,
-			backgroundColor: colors.cardBackground,
-			justifyContent: "center",
-			alignItems: "center",
-			shadowColor: colors.shadow,
-			shadowOffset: { width: 0, height: 1 },
-			shadowOpacity: 0.1,
-			shadowRadius: 3,
-			elevation: 2,
-		},
-		gearIcon: {
-			fontSize: 20,
-		},
-		statsContainer: {
-			flexDirection: "row",
-			paddingHorizontal: spacing.lg,
-			gap: spacing.md,
-			marginTop: spacing.md,
-		},
-		statCard: {
-			flex: 1,
-			backgroundColor: colors.cardBackground,
-			borderRadius: 12,
-			padding: spacing.md,
-			alignItems: "center",
-			shadowColor: colors.shadow,
-			shadowOffset: { width: 0, height: 2 },
-			shadowOpacity: 0.05,
-			shadowRadius: 8,
-			elevation: 2,
-		},
-		statLabel: {
-			...typography.caption1,
-			color: colors.textSecondary,
-			textTransform: "uppercase",
-			letterSpacing: 0.5,
-		},
-		statValue: {
-			...typography.title1,
-			color: colors.period,
-			marginTop: spacing.xs,
-		},
-		statSubtext: {
-			...typography.caption1,
-			color: colors.textSecondary,
-			marginTop: spacing.xs,
-		},
-		section: {
-			marginTop: spacing.xl,
-			paddingHorizontal: spacing.lg,
-		},
-		sectionTitle: {
-			...typography.headline,
-			color: colors.textPrimary,
-			marginBottom: spacing.md,
-		},
-		emptyState: {
-			backgroundColor: colors.cardBackground,
-			borderRadius: 12,
-			padding: spacing.xl,
-			alignItems: "center",
-		},
-		emptyStateText: {
-			...typography.headline,
-			color: colors.textPrimary,
-		},
-		emptyStateSubtext: {
-			...typography.subhead,
-			color: colors.textSecondary,
-			marginTop: spacing.xs,
-			textAlign: "center",
-		},
-		swipeHint: {
-			...typography.caption1,
-			color: colors.textSecondary,
-			textAlign: "center",
-			marginTop: spacing.sm,
-		},
-		infoSection: {
-			marginTop: spacing.xl,
-			alignItems: "center",
-		},
-		infoText: {
-			...typography.footnote,
-			color: colors.textSecondary,
-		},
+	return useMemo(
+		() =>
+			StyleSheet.create({
+				container: {
+					flex: 1,
+					backgroundColor: colors.background,
+				},
+				scrollContent: {
+					paddingBottom: spacing.xl * 2,
+				},
+				loadingContainer: {
+					flex: 1,
+					justifyContent: "center",
+					alignItems: "center",
+				},
+				loadingText: {
+					...typography.body,
+					color: colors.textSecondary,
+				},
+				header: {
+					flexDirection: "row",
+					alignItems: "center",
+					justifyContent: "space-between",
+					paddingTop: spacing.lg,
+					paddingBottom: spacing.md,
+					paddingHorizontal: spacing.lg,
+				},
+				headerSpacer: {
+					width: 40,
+				},
+				title: {
+					...typography.title2,
+					color: colors.textPrimary,
+				},
+				gearButton: {
+					width: 40,
+					height: 40,
+					borderRadius: 20,
+					backgroundColor: colors.cardBackground,
+					justifyContent: "center",
+					alignItems: "center",
+					shadowColor: colors.shadow,
+					shadowOffset: { width: 0, height: 1 },
+					shadowOpacity: 0.1,
+					shadowRadius: 3,
+					elevation: 2,
+				},
+				gearIcon: {
+					fontSize: 20,
+				},
+				statsContainer: {
+					flexDirection: "row",
+					paddingHorizontal: spacing.lg,
+					gap: spacing.md,
+					marginTop: spacing.md,
+				},
+				statCard: {
+					flex: 1,
+					backgroundColor: colors.cardBackground,
+					borderRadius: 12,
+					padding: spacing.md,
+					alignItems: "center",
+					shadowColor: colors.shadow,
+					shadowOffset: { width: 0, height: 2 },
+					shadowOpacity: 0.05,
+					shadowRadius: 8,
+					elevation: 2,
+				},
+				statLabel: {
+					...typography.caption1,
+					color: colors.textSecondary,
+					textTransform: "uppercase",
+					letterSpacing: 0.5,
+				},
+				statValue: {
+					...typography.title1,
+					color: colors.period,
+					marginTop: spacing.xs,
+				},
+				statSubtext: {
+					...typography.caption1,
+					color: colors.textSecondary,
+					marginTop: spacing.xs,
+				},
+				section: {
+					marginTop: spacing.xl,
+					paddingHorizontal: spacing.lg,
+				},
+				sectionTitle: {
+					...typography.headline,
+					color: colors.textPrimary,
+					marginBottom: spacing.md,
+				},
+				emptyState: {
+					backgroundColor: colors.cardBackground,
+					borderRadius: 12,
+					padding: spacing.xl,
+					alignItems: "center",
+				},
+				emptyStateText: {
+					...typography.headline,
+					color: colors.textPrimary,
+				},
+				emptyStateSubtext: {
+					...typography.subhead,
+					color: colors.textSecondary,
+					marginTop: spacing.xs,
+					textAlign: "center",
+				},
+				swipeHint: {
+					...typography.caption1,
+					color: colors.textSecondary,
+					textAlign: "center",
+					marginTop: spacing.sm,
+				},
+				infoSection: {
+					marginTop: spacing.xl,
+					alignItems: "center",
+				},
+				infoText: {
+					...typography.footnote,
+					color: colors.textSecondary,
+				},
 
-		// Clear All Data Modal
-		clearAllOverlay: {
-			flex: 1,
-			backgroundColor: "rgba(0, 0, 0, 0.5)",
-			justifyContent: "center",
-			alignItems: "center",
-			padding: spacing.lg,
-		},
-		clearAllModal: {
-			backgroundColor: colors.cardBackground,
-			borderRadius: 20,
-			padding: spacing.xl,
-			width: "100%",
-			maxWidth: 340,
-			alignItems: "center",
-		},
-		clearAllEmoji: {
-			fontSize: 48,
-			marginBottom: spacing.md,
-		},
-		clearAllTitle: {
-			...typography.title3,
-			color: colors.textPrimary,
-			marginBottom: spacing.sm,
-		},
-		clearAllSubtitle: {
-			...typography.subhead,
-			color: colors.textSecondary,
-			textAlign: "center",
-			marginBottom: spacing.lg,
-		},
-		holdButtonContainer: {
-			width: "100%",
-			marginBottom: spacing.md,
-		},
-		clearAllCancel: {
-			padding: spacing.sm,
-		},
-		clearAllCancelText: {
-			...typography.body,
-			color: colors.ovulation,
-		},
-	}), [colors]);
+				// Clear All Data Modal
+				clearAllOverlay: {
+					flex: 1,
+					backgroundColor: "rgba(0, 0, 0, 0.5)",
+					justifyContent: "center",
+					alignItems: "center",
+					padding: spacing.lg,
+				},
+				clearAllModal: {
+					backgroundColor: colors.cardBackground,
+					borderRadius: 20,
+					padding: spacing.xl,
+					width: "100%",
+					maxWidth: 340,
+					alignItems: "center",
+				},
+				clearAllEmoji: {
+					fontSize: 48,
+					marginBottom: spacing.md,
+				},
+				clearAllTitle: {
+					...typography.title3,
+					color: colors.textPrimary,
+					marginBottom: spacing.sm,
+				},
+				clearAllSubtitle: {
+					...typography.subhead,
+					color: colors.textSecondary,
+					textAlign: "center",
+					marginBottom: spacing.lg,
+				},
+				holdButtonContainer: {
+					width: "100%",
+					marginBottom: spacing.md,
+				},
+				clearAllCancel: {
+					padding: spacing.sm,
+				},
+				clearAllCancelText: {
+					...typography.body,
+					color: colors.ovulation,
+				},
+			}),
+		[colors],
+	);
 }
 
 export default function HistoryScreen() {
@@ -226,13 +230,23 @@ export default function HistoryScreen() {
 	useFocusEffect(
 		useCallback(() => {
 			loadData();
-		}, [loadData])
+		}, [loadData]),
 	);
 
 	const getMonthName = (month: number): string => {
 		const monthKeys = [
-			"january", "february", "march", "april", "may", "june",
-			"july", "august", "september", "october", "november", "december",
+			"january",
+			"february",
+			"march",
+			"april",
+			"may",
+			"june",
+			"july",
+			"august",
+			"september",
+			"october",
+			"november",
+			"december",
 		];
 		return t(monthKeys[month - 1]);
 	};
@@ -306,21 +320,17 @@ export default function HistoryScreen() {
 
 	const handleClearAllPress = () => {
 		// Step 1: Standard alert
-		Alert.alert(
-			t("clearAllData"),
-			t("clearAllDataWarning"),
-			[
-				{ text: t("cancel"), style: "cancel" },
-				{
-					text: t("continueButton"),
-					style: "destructive",
-					onPress: () => {
-						// Step 2: Show the hold-to-delete modal
-						setShowClearAllModal(true);
-					},
+		Alert.alert(t("clearAllData"), t("clearAllDataWarning"), [
+			{ text: t("cancel"), style: "cancel" },
+			{
+				text: t("continueButton"),
+				style: "destructive",
+				onPress: () => {
+					// Step 2: Show the hold-to-delete modal
+					setShowClearAllModal(true);
 				},
-			]
-		);
+			},
+		]);
 	};
 
 	const handleClearAllComplete = async () => {
@@ -356,10 +366,7 @@ export default function HistoryScreen() {
 						<View style={styles.headerSpacer} />
 						<Text style={styles.title}>{t("cycleHistory")}</Text>
 						{cycles.length > 0 ? (
-							<TouchableOpacity
-								style={styles.gearButton}
-								onPress={handleClearAllPress}
-							>
+							<TouchableOpacity style={styles.gearButton} onPress={handleClearAllPress}>
 								<Text style={styles.gearIcon}>&#9881;&#65039;</Text>
 							</TouchableOpacity>
 						) : (
@@ -444,14 +451,8 @@ export default function HistoryScreen() {
 					transparent
 					onRequestClose={() => setShowClearAllModal(false)}
 				>
-					<Pressable
-						style={styles.clearAllOverlay}
-						onPress={() => setShowClearAllModal(false)}
-					>
-						<Pressable
-							style={styles.clearAllModal}
-							onPress={(e) => e.stopPropagation()}
-						>
+					<Pressable style={styles.clearAllOverlay} onPress={() => setShowClearAllModal(false)}>
+						<Pressable style={styles.clearAllModal} onPress={(e) => e.stopPropagation()}>
 							<Text style={styles.clearAllEmoji}>&#128680;</Text>
 							<Text style={styles.clearAllTitle}>{t("clearAllData")}</Text>
 							<Text style={styles.clearAllSubtitle}>{t("clearAllDataFinal")}</Text>
@@ -460,10 +461,7 @@ export default function HistoryScreen() {
 								<HoldToDeleteButton onComplete={handleClearAllComplete} duration={3000} />
 							</View>
 
-							<TouchableOpacity
-								style={styles.clearAllCancel}
-								onPress={() => setShowClearAllModal(false)}
-							>
+							<TouchableOpacity style={styles.clearAllCancel} onPress={() => setShowClearAllModal(false)}>
 								<Text style={styles.clearAllCancelText}>{t("cancel")}</Text>
 							</TouchableOpacity>
 						</Pressable>
