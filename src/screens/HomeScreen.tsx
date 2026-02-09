@@ -23,6 +23,7 @@ const modules: Module[] = [
 	{ id: "2", name: "Family Tree", color: "#6B8E23", icon: "🌳", route: "FamilyTree" },
 	{ id: "3", name: "Flags", color: "#1A5276", icon: "\u{1F1EC}\u{1F1EA}", route: "Flags" },
 	{ id: "4", name: "LinguaFlip", color: "#008B8B", icon: "\u{1F30E}", route: "LinguaFlip" },
+	{ id: "5", name: "Birthdays", color: "#E91E63", icon: "\u{1F382}", route: "Birthdays" },
 ];
 
 function getHomeColors(mode: "light" | "dark") {

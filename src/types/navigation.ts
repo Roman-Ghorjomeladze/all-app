@@ -5,8 +5,21 @@ export type RootStackParamList = {
 	FlipUp: undefined;
 	Flags: undefined;
 	LinguaFlip: undefined;
+	Birthdays: undefined;
 	Module4: undefined;
 	Module5: undefined;
+};
+
+export type BirthdaysStackParamList = {
+	BirthdaysTabs: undefined;
+	BirthdaysEventForm:
+		| { mode: "create"; date?: string }
+		| { mode: "edit"; eventId: number };
+};
+
+export type BirthdaysTabParamList = {
+	BirthdaysList: undefined;
+	BirthdaysCalendar: undefined;
 };
 
 export type CircleFlowTabParamList = {
