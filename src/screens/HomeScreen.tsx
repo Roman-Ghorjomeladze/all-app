@@ -250,6 +250,7 @@ function useStyles(c: HomeColors) {
 					backgroundColor: c.background,
 					borderRadius: 20,
 					padding: 4,
+					minWidth: 115,
 				},
 				themeOption: {
 					paddingHorizontal: 14,
@@ -267,6 +268,7 @@ function useStyles(c: HomeColors) {
 					backgroundColor: c.background,
 					borderRadius: 20,
 					padding: 4,
+					minWidth: 115,
 				},
 				languageOption: {
 					paddingHorizontal: 16,

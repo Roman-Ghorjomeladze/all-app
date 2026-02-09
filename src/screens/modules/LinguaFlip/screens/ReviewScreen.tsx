@@ -8,8 +8,8 @@ import Animated, {
 	withSpring,
 	interpolate,
 	Extrapolation,
-	runOnJS,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useFocusEffect, useRoute, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -106,7 +106,7 @@ function useStyles(colors: Colors) {
 					alignItems: "center",
 					paddingHorizontal: spacing.lg,
 				},
-				behindCard: {
+				cardWrapper: {
 					position: "absolute",
 				},
 				hintsRow: {
@@ -149,6 +149,113 @@ function useStyles(colors: Colors) {
 	);
 }
 
+// ── Swipeable card wrapper ──
+// Each card gets its OWN animated values.
+// The top card can be dragged; the behind card is static with scale/opacity.
+// When swiped away, this component stays mounted off-screen until parent unmounts it.
+type SwipeableCardProps = {
+	card: Card;
+	isTop: boolean;
+	showBothSides: boolean;
+	onSwiped: (direction: "right" | "left") => void;
+};
+
+function SwipeableCard({ card, isTop, showBothSides, onSwiped }: SwipeableCardProps) {
+	const translateX = useSharedValue(0);
+	const translateY = useSharedValue(0);
+	const scale = useSharedValue(isTop ? 1 : 0.95);
+	const opacity = useSharedValue(isTop ? 1 : 0.7);
+	const isSwiping = useSharedValue(false);
+
+	// When this card gets promoted from behind → top, animate scale/opacity up
+	const wasTop = useRef(isTop);
+	useEffect(() => {
+		if (isTop && !wasTop.current) {
+			scale.value = withSpring(1);
+			opacity.value = withSpring(1);
+		}
+		wasTop.current = isTop;
+	}, [isTop, scale, opacity]);
+
+	const rotateZ = useDerivedValue(() => {
+		return `${interpolate(
+			translateX.value,
+			[-SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2],
+			[-15, 0, 15],
+			Extrapolation.CLAMP,
+		)}deg`;
+	});
+
+	const animatedStyle = useAnimatedStyle(() => ({
+		transform: [
+			{ translateX: translateX.value },
+			{ translateY: translateY.value },
+			{ rotateZ: rotateZ.value },
+			{ scale: scale.value },
+		],
+		opacity: opacity.value,
+	}));
+
+	const swipe = useCallback(
+		(direction: "right" | "left") => {
+			"worklet";
+			const toX = direction === "right" ? SCREEN_WIDTH * 1.5 : -SCREEN_WIDTH * 1.5;
+			translateX.value = withTiming(toX, { duration: 250 }, () => {
+				scheduleOnRN(onSwiped, direction);
+			});
+		},
+		[translateX, onSwiped],
+	);
+
+	const resetCard = useCallback(() => {
+		"worklet";
+		translateX.value = withSpring(0);
+		translateY.value = withSpring(0);
+	}, [translateX, translateY]);
+
+	const panGesture = useMemo(
+		() =>
+			Gesture.Pan()
+				.enabled(isTop)
+				.activeOffsetX([-10, 10])
+				.failOffsetY([-10, 10])
+				.onStart(() => {
+					isSwiping.value = true;
+				})
+				.onUpdate((event) => {
+					translateX.value = event.translationX;
+					translateY.value = event.translationY * 0.3;
+				})
+				.onEnd((event) => {
+					if (event.translationX > SWIPE_THRESHOLD || (event.translationX > 40 && event.velocityX > 500)) {
+						swipe("right");
+					} else if (
+						event.translationX < -SWIPE_THRESHOLD ||
+						(event.translationX < -40 && event.velocityX < -500)
+					) {
+						swipe("left");
+					} else {
+						resetCard();
+					}
+					isSwiping.value = false;
+				}),
+		[isTop, translateX, translateY, isSwiping, swipe, resetCard],
+	);
+
+	return (
+		<GestureDetector gesture={panGesture}>
+			<Animated.View style={animatedStyle}>
+				<FlashCard
+					frontText={card.front_text}
+					backText={card.back_text}
+					mastery={card.mastery}
+					showBothSides={showBothSides}
+				/>
+			</Animated.View>
+		</GestureDetector>
+	);
+}
+
 export default function ReviewScreen(_props: Props) {
 	const colors = useColors();
 	const styles = useStyles(colors);
@@ -165,47 +272,9 @@ export default function ReviewScreen(_props: Props) {
 	const [showBothSides, setShowBothSides] = useState(false);
 	const [showManage, setShowManage] = useState(false);
 	const [swipeFeedback, setSwipeFeedback] = useState<"know" | "learning" | null>(null);
-	const [isAnimating, setIsAnimating] = useState(false);
 
-	// Double-buffer card data
-	const [topCard, setTopCard] = useState<Card | null>(null);
-	const [behindCard, setBehindCard] = useState<Card | null>(null);
-
-	// Reanimated shared values
-	const translateX = useSharedValue(0);
-	const translateY = useSharedValue(0);
-	const behindScale = useSharedValue(0.95);
-	const behindOpacity = useSharedValue(0.7);
-
-	// Refs for worklet access
-	const cardsRef = useRef<Card[]>([]);
-	const currentIndexRef = useRef(0);
 	const selectedTagIdRef = useRef<number | null>(null);
-	const isAnimatingRef = useRef(false);
-
-	cardsRef.current = cards;
-	currentIndexRef.current = currentIndex;
 	selectedTagIdRef.current = selectedTagId;
-
-	// Derived rotation
-	const rotateZ = useDerivedValue(() => {
-		return `${interpolate(
-			translateX.value,
-			[-SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2],
-			[-15, 0, 15],
-			Extrapolation.CLAMP,
-		)}deg`;
-	});
-
-	// Animated styles
-	const topCardStyle = useAnimatedStyle(() => ({
-		transform: [{ translateX: translateX.value }, { translateY: translateY.value }, { rotateZ: rotateZ.value }],
-	}));
-
-	const behindCardStyle = useAnimatedStyle(() => ({
-		transform: [{ scale: behindScale.value }],
-		opacity: behindOpacity.value,
-	}));
 
 	const loadData = useCallback(
 		async (tagIdOverride?: number | null) => {
@@ -222,14 +291,8 @@ export default function ReviewScreen(_props: Props) {
 			}
 			setCards(loadedCards);
 			setCurrentIndex(0);
-			setTopCard(loadedCards[0] || null);
-			setBehindCard(loadedCards[1] || null);
-			translateX.value = 0;
-			translateY.value = 0;
-			behindScale.value = 0.95;
-			behindOpacity.value = 0.7;
 		},
-		[projectId, translateX, translateY, behindScale, behindOpacity],
+		[projectId],
 	);
 
 	useFocusEffect(
@@ -238,123 +301,48 @@ export default function ReviewScreen(_props: Props) {
 		}, [selectedTagId, loadData]),
 	);
 
-	// Sync buffer when cards change from external sources (tag filter, etc.)
-	const lastSyncRef = useRef({ cards: [] as Card[], index: 0 });
-	useEffect(() => {
-		if (lastSyncRef.current.cards !== cards || lastSyncRef.current.index !== currentIndex) {
-			lastSyncRef.current = { cards, index: currentIndex };
-			if (!isAnimatingRef.current) {
-				setTopCard(cards[currentIndex] || null);
-				setBehindCard(cards[currentIndex + 1] || null);
-			}
-		}
-	}, [cards, currentIndex]);
-
-	// Called from the UI thread via runOnJS after swipe animation completes
-	const onSwipeComplete = useCallback(
+	// When a card is swiped, just advance the index.
+	// The swiped card stays mounted off-screen, the behind card
+	// (already showing correct data) becomes the new top — zero flicker.
+	const onCardSwiped = useCallback(
 		(direction: "right" | "left") => {
-			const currentCards = cardsRef.current;
-			const index = currentIndexRef.current;
-			const currentCard = currentCards[index];
+			const currentCard = cards[currentIndex];
 			if (!currentCard) return;
 
 			const isCorrect = direction === "right";
 			setSwipeFeedback(isCorrect ? "know" : "learning");
 			updateCardMastery(currentCard.id, isCorrect);
 
-			const nextIndex = index + 1;
-
-			if (nextIndex < currentCards.length) {
-				const newTopCard = currentCards[nextIndex];
-				const newBehindCard = currentCards[nextIndex + 1] || null;
-
-				// Reset shared values synchronously
-				translateX.value = 0;
-				translateY.value = 0;
-				behindScale.value = 0.95;
-				behindOpacity.value = 0.7;
-
-				// Batch all state updates
-				setTopCard(newTopCard);
-				setBehindCard(newBehindCard);
+			const nextIndex = currentIndex + 1;
+			if (nextIndex < cards.length) {
 				setCurrentIndex(nextIndex);
-				setSwipeFeedback(null);
-				setIsAnimating(false);
-				isAnimatingRef.current = false;
+				// Clear feedback after a short delay
+				setTimeout(() => setSwipeFeedback(null), 300);
 			} else {
 				// End of deck — reload
-				setTopCard(null);
-				setBehindCard(null);
 				setSwipeFeedback(null);
-				setCurrentIndex(0);
-
-				loadData().then(() => {
-					setIsAnimating(false);
-					isAnimatingRef.current = false;
-				});
+				loadData();
 			}
 		},
-		[translateX, translateY, behindScale, behindOpacity, loadData],
+		[cards, currentIndex, loadData],
 	);
 
-	// Swipe animation (runs on UI thread, calls JS when done)
-	const swipe = useCallback(
-		(direction: "right" | "left") => {
-			"worklet";
-			const toX = direction === "right" ? SCREEN_WIDTH * 1.5 : -SCREEN_WIDTH * 1.5;
-			translateX.value = withTiming(toX, { duration: 250 }, () => {
-				runOnJS(onSwipeComplete)(direction);
-			});
-		},
-		[translateX, onSwipeComplete],
-	);
-
-	const resetCard = useCallback(() => {
-		"worklet";
-		translateX.value = withSpring(0);
-		translateY.value = withSpring(0);
-		behindScale.value = withSpring(0.95);
-		behindOpacity.value = withSpring(0.7);
-	}, [translateX, translateY, behindScale, behindOpacity]);
-
-	const setAnimatingTrue = useCallback(() => {
-		setIsAnimating(true);
-		isAnimatingRef.current = true;
-	}, []);
-
-	// Gesture handler
-	const panGesture = useMemo(
-		() =>
-			Gesture.Pan()
-				.activeOffsetX([-10, 10])
-				.failOffsetY([-10, 10])
-				.onStart(() => {
-					runOnJS(setAnimatingTrue)();
-				})
-				.onUpdate((event) => {
-					translateX.value = event.translationX;
-					translateY.value = event.translationY * 0.3;
-
-					const progress = Math.min(Math.abs(event.translationX) / SWIPE_THRESHOLD, 1);
-					behindScale.value = 0.95 + progress * 0.05;
-					behindOpacity.value = 0.7 + progress * 0.3;
-				})
-				.onEnd((event) => {
-					if (event.translationX > SWIPE_THRESHOLD || (event.translationX > 40 && event.velocityX > 500)) {
-						swipe("right");
-					} else if (
-						event.translationX < -SWIPE_THRESHOLD ||
-						(event.translationX < -40 && event.velocityX < -500)
-					) {
-						swipe("left");
-					} else {
-						resetCard();
-						runOnJS(setIsAnimating)(false);
-						isAnimatingRef.current = false;
-					}
-				}),
-		[translateX, translateY, behindScale, behindOpacity, swipe, resetCard, setAnimatingTrue],
-	);
+	// We render only 2 cards at a time: current (top) and current+1 (behind).
+	// Each has its OWN FlashCard instance with fixed data — no prop swapping.
+	// The current card keeps animating off-screen after swipe, then React
+	// unmounts it on the next render when currentIndex advances.
+	const visibleCards = useMemo(() => {
+		const result: { card: Card; isTop: boolean }[] = [];
+		// Behind card first (renders underneath)
+		if (cards[currentIndex + 1]) {
+			result.push({ card: cards[currentIndex + 1], isTop: false });
+		}
+		// Top card last (renders on top)
+		if (cards[currentIndex]) {
+			result.push({ card: cards[currentIndex], isTop: true });
+		}
+		return result;
+	}, [cards, currentIndex]);
 
 	const handleCardPress = (card: Card) => {
 		stackNavigation.navigate("LLCardForm", {
@@ -506,7 +494,7 @@ export default function ReviewScreen(_props: Props) {
 					<Text style={styles.emptyTitle}>{t("llNoCards")}</Text>
 					<Text style={styles.emptyHint}>{t("llNoCardsHint")}</Text>
 				</View>
-			) : topCard ? (
+			) : cards[currentIndex] ? (
 				<>
 					{/* Counter */}
 					<Text style={styles.counter}>
@@ -530,29 +518,20 @@ export default function ReviewScreen(_props: Props) {
 
 					{/* Card Stack */}
 					<View style={styles.cardArea}>
-						{/* Behind card (preview of next) */}
-						{behindCard && (
-							<Animated.View pointerEvents="none" style={[styles.behindCard, behindCardStyle]}>
-								<FlashCard
-									frontText={behindCard.front_text}
-									backText={behindCard.back_text}
-									mastery={behindCard.mastery}
+						{visibleCards.map(({ card, isTop }) => (
+							<View
+								key={card.id}
+								style={[styles.cardWrapper, isTop ? { zIndex: 2 } : { zIndex: 1 }]}
+								pointerEvents={isTop ? "auto" : "none"}
+							>
+								<SwipeableCard
+									card={card}
+									isTop={isTop}
 									showBothSides={showBothSides}
+									onSwiped={onCardSwiped}
 								/>
-							</Animated.View>
-						)}
-
-						{/* Top card (swipeable) */}
-						<GestureDetector gesture={panGesture}>
-							<Animated.View style={topCardStyle}>
-								<FlashCard
-									frontText={topCard.front_text}
-									backText={topCard.back_text}
-									mastery={topCard.mastery}
-									showBothSides={showBothSides}
-								/>
-							</Animated.View>
-						</GestureDetector>
+							</View>
+						))}
 					</View>
 
 					{/* Swipe hints */}
