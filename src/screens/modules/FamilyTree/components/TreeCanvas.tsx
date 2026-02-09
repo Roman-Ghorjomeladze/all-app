@@ -6,7 +6,7 @@ import Svg from "react-native-svg";
 import { TreeLayout } from "../utils/treeLayout";
 import { useColors, Colors } from "../theme";
 import PersonNode from "./PersonNode";
-import ConnectorLine from "./ConnectorLine";
+import ConnectorLine, { FamilyConnector } from "./ConnectorLine";
 
 type TreeCanvasProps = {
 	layout: TreeLayout;
@@ -28,7 +28,7 @@ function useStyles(colors: Colors) {
 			backgroundColor: colors.canvasBackground,
 			overflow: "hidden",
 		},
-		canvas: {
+		gestureArea: {
 			flex: 1,
 		},
 	}), [colors]);
@@ -130,38 +130,48 @@ const TreeCanvas = forwardRef<TreeCanvasHandle, TreeCanvasProps>(function TreeCa
 
 	const composedGesture = Gesture.Simultaneous(panGesture, pinchGesture);
 
-	const animatedStyle = useAnimatedStyle(() => ({
+	const transformStyle = useAnimatedStyle(() => ({
 		transform: [
 			{ translateX: translateX.value },
 			{ translateY: translateY.value },
 			{ scale: scale.value },
 		],
+		transformOrigin: "left top",
 	}));
 
-	// Calculate SVG viewport size (at least container size)
-	const svgWidth = Math.max(layout.width, containerSize.width);
-	const svgHeight = Math.max(layout.height, containerSize.height);
+	// SVG should match the tree content size exactly
+	const svgWidth = Math.max(layout.width, 1);
+	const svgHeight = Math.max(layout.height, 1);
 
 	return (
 		<GestureHandlerRootView style={styles.container} onLayout={handleLayout}>
 			<GestureDetector gesture={composedGesture}>
-				<Animated.View style={[styles.canvas, animatedStyle]}>
-					<Svg width={svgWidth} height={svgHeight}>
-						{/* Render edges first (behind nodes) */}
-						{layout.edges.map((edge) => (
-							<ConnectorLine key={edge.id} edge={edge} />
-						))}
+				{/* Animated.View fills entire container — gestures work on empty canvas too */}
+				<Animated.View style={styles.gestureArea}>
+					{/* Inner Animated.View carries the transform (translate + scale) */}
+					<Animated.View style={transformStyle}>
+						<Svg width={svgWidth} height={svgHeight}>
+							{/* Render family group connectors (parent → rail → children) */}
+							{layout.familyEdges.map((edge) => (
+								<FamilyConnector key={edge.id} edge={edge} />
+							))}
 
-						{/* Render nodes on top */}
-						{layout.nodes.map((node) => (
-							<PersonNode
-								key={node.id}
-								node={node}
-								onPress={onPersonPress}
-								onAddChild={onAddChild}
-							/>
-						))}
-					</Svg>
+							{/* Render spouse edges */}
+							{layout.edges.map((edge) => (
+								<ConnectorLine key={edge.id} edge={edge} />
+							))}
+
+							{/* Render nodes on top */}
+							{layout.nodes.map((node) => (
+								<PersonNode
+									key={node.id}
+									node={node}
+									onPress={onPersonPress}
+									onAddChild={onAddChild}
+								/>
+							))}
+						</Svg>
+					</Animated.View>
 				</Animated.View>
 			</GestureDetector>
 		</GestureHandlerRootView>

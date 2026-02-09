@@ -1,6 +1,6 @@
 import React from "react";
 import { Line, Path } from "react-native-svg";
-import { LayoutEdge } from "../utils/treeLayout";
+import { LayoutEdge, FamilyEdge } from "../utils/treeLayout";
 import { useColors } from "../theme";
 
 type ConnectorLineProps = {
@@ -10,36 +10,64 @@ type ConnectorLineProps = {
 export default function ConnectorLine({ edge }: ConnectorLineProps) {
 	const colors = useColors();
 
-	if (edge.type === "spouse") {
-		// Horizontal dashed line between spouses
-		return (
-			<Line
-				x1={edge.from.x}
-				y1={edge.from.y}
-				x2={edge.to.x}
-				y2={edge.to.y}
-				stroke={colors.spouse}
-				strokeWidth={2}
-				strokeDasharray="6,4"
-				strokeLinecap="round"
-			/>
-		);
+	// Horizontal dashed line between spouses
+	return (
+		<Line
+			x1={edge.from.x}
+			y1={edge.from.y}
+			x2={edge.to.x}
+			y2={edge.to.y}
+			stroke={colors.spouse}
+			strokeWidth={2}
+			strokeDasharray="6,4"
+			strokeLinecap="round"
+		/>
+	);
+}
+
+type FamilyConnectorProps = {
+	edge: FamilyEdge;
+};
+
+/**
+ * Draws a grouped family connector:
+ * - Vertical line from parent bottom-center down to the horizontal rail
+ * - Horizontal rail spanning from leftmost to rightmost child
+ * - Vertical drops from the rail down to each child's top-center
+ */
+export function FamilyConnector({ edge }: FamilyConnectorProps) {
+	const colors = useColors();
+
+	const { parentPoint, railY, childPoints } = edge;
+
+	// Build the SVG path
+	let d = "";
+
+	// 1. Vertical drop from parent to rail
+	d += `M ${parentPoint.x} ${parentPoint.y} L ${parentPoint.x} ${railY} `;
+
+	if (childPoints.length === 1) {
+		// Single child: just continue straight down
+		d += `L ${childPoints[0].x} ${railY} L ${childPoints[0].x} ${childPoints[0].y} `;
+	} else {
+		// Multiple children: draw horizontal rail + vertical drops
+		// Sort child points by x
+		const sorted = [...childPoints].sort((a, b) => a.x - b.x);
+		const leftX = sorted[0].x;
+		const rightX = sorted[sorted.length - 1].x;
+
+		// Horizontal rail
+		d += `M ${leftX} ${railY} L ${rightX} ${railY} `;
+
+		// Vertical drops to each child
+		for (const cp of sorted) {
+			d += `M ${cp.x} ${railY} L ${cp.x} ${cp.y} `;
+		}
 	}
-
-	// Parent-child: vertical connector with right-angle path
-	// From parent bottom center -> down to midpoint -> horizontal to child -> down to child top
-	const midY = edge.from.y + (edge.to.y - edge.from.y) / 2;
-
-	const pathData =
-		edge.from.x === edge.to.x
-			? // Straight vertical line if aligned
-				`M ${edge.from.x} ${edge.from.y} L ${edge.to.x} ${edge.to.y}`
-			: // Right-angle connector
-				`M ${edge.from.x} ${edge.from.y} L ${edge.from.x} ${midY} L ${edge.to.x} ${midY} L ${edge.to.x} ${edge.to.y}`;
 
 	return (
 		<Path
-			d={pathData}
+			d={d}
 			stroke={colors.parentChild}
 			strokeWidth={2}
 			fill="none"

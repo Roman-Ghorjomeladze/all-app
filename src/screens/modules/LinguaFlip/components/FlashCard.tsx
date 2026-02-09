@@ -12,6 +12,7 @@ type Props = {
 	backText: string;
 	mastery: number;
 	showBothSides: boolean;
+	blurred?: boolean;
 	onFlip?: () => void;
 };
 
@@ -99,10 +100,33 @@ function useStyles(colors: Colors) {
 			color: colors.accent,
 			textAlign: "center",
 		},
+		// Blur placeholder bars
+		blurBar: {
+			borderRadius: 6,
+			backgroundColor: colors.textSecondary,
+			opacity: 0.18,
+		},
+		blurBarLarge: {
+			width: 140,
+			height: 24,
+		},
+		blurBarSmall: {
+			width: 100,
+			height: 18,
+			marginTop: 8,
+		},
 	}), [colors]);
 }
 
-export default function FlashCard({ frontText, backText, mastery, showBothSides, onFlip }: Props) {
+function BlurredPlaceholder({ styles, large }: { styles: ReturnType<typeof useStyles>; large: boolean }) {
+	return (
+		<View style={{ alignItems: "center" }}>
+			<View style={[styles.blurBar, large ? styles.blurBarLarge : styles.blurBarSmall]} />
+		</View>
+	);
+}
+
+export default function FlashCard({ frontText, backText, mastery, showBothSides, blurred, onFlip }: Props) {
 	const colors = useColors();
 	const styles = useStyles(colors);
 	const flipAnim = useRef(new Animated.Value(0)).current;
@@ -150,9 +174,19 @@ export default function FlashCard({ frontText, backText, mastery, showBothSides,
 				<View style={styles.masteryRow}>
 					<MasteryStars level={mastery} />
 				</View>
-				<Text style={styles.frontTextStatic}>{frontText}</Text>
-				<View style={styles.divider} />
-				<Text style={styles.backTextStatic}>{backText}</Text>
+				{blurred ? (
+					<>
+						<BlurredPlaceholder styles={styles} large />
+						<View style={styles.divider} />
+						<BlurredPlaceholder styles={styles} large={false} />
+					</>
+				) : (
+					<>
+						<Text style={styles.frontTextStatic}>{frontText}</Text>
+						<View style={styles.divider} />
+						<Text style={styles.backTextStatic}>{backText}</Text>
+					</>
+				)}
 			</View>
 		);
 	}
@@ -174,8 +208,12 @@ export default function FlashCard({ frontText, backText, mastery, showBothSides,
 						<MasteryStars level={mastery} />
 					</View>
 					<Text style={styles.cardLabel}>FRONT</Text>
-					<Text style={styles.cardText}>{frontText}</Text>
-					<Text style={styles.tapHint}>Tap to flip</Text>
+					{blurred ? (
+						<BlurredPlaceholder styles={styles} large />
+					) : (
+						<Text style={styles.cardText}>{frontText}</Text>
+					)}
+					{!blurred && <Text style={styles.tapHint}>Tap to flip</Text>}
 				</Animated.View>
 
 				{/* Back side */}
@@ -193,8 +231,12 @@ export default function FlashCard({ frontText, backText, mastery, showBothSides,
 						<MasteryStars level={mastery} />
 					</View>
 					<Text style={styles.cardLabel}>BACK</Text>
-					<Text style={styles.cardText}>{backText}</Text>
-					<Text style={styles.tapHint}>Tap to flip</Text>
+					{blurred ? (
+						<BlurredPlaceholder styles={styles} large />
+					) : (
+						<Text style={styles.cardText}>{backText}</Text>
+					)}
+					{!blurred && <Text style={styles.tapHint}>Tap to flip</Text>}
 				</Animated.View>
 			</View>
 		</TouchableWithoutFeedback>

@@ -164,18 +164,16 @@ function SwipeableCard({ card, isTop, showBothSides, onSwiped }: SwipeableCardPr
 	const translateX = useSharedValue(0);
 	const translateY = useSharedValue(0);
 	const scale = useSharedValue(isTop ? 1 : 0.95);
-	const opacity = useSharedValue(isTop ? 1 : 0.7);
 	const isSwiping = useSharedValue(false);
 
-	// When this card gets promoted from behind → top, animate scale/opacity up
+	// When this card gets promoted from behind → top, animate scale up smoothly
 	const wasTop = useRef(isTop);
 	useEffect(() => {
 		if (isTop && !wasTop.current) {
-			scale.value = withSpring(1);
-			opacity.value = withSpring(1);
+			scale.value = withSpring(1, { damping: 14, stiffness: 120 });
 		}
 		wasTop.current = isTop;
-	}, [isTop, scale, opacity]);
+	}, [isTop, scale]);
 
 	const rotateZ = useDerivedValue(() => {
 		return `${interpolate(
@@ -193,7 +191,6 @@ function SwipeableCard({ card, isTop, showBothSides, onSwiped }: SwipeableCardPr
 			{ rotateZ: rotateZ.value },
 			{ scale: scale.value },
 		],
-		opacity: opacity.value,
 	}));
 
 	const swipe = useCallback(
@@ -250,6 +247,7 @@ function SwipeableCard({ card, isTop, showBothSides, onSwiped }: SwipeableCardPr
 					backText={card.back_text}
 					mastery={card.mastery}
 					showBothSides={showBothSides}
+					blurred={!isTop}
 				/>
 			</Animated.View>
 		</GestureDetector>
@@ -327,22 +325,36 @@ export default function ReviewScreen(_props: Props) {
 		[cards, currentIndex, loadData],
 	);
 
-	// We render only 2 cards at a time: current (top) and current+1 (behind).
-	// Each has its OWN FlashCard instance with fixed data — no prop swapping.
-	// The current card keeps animating off-screen after swipe, then React
-	// unmounts it on the next render when currentIndex advances.
+	// Track the previously swiped card so we can keep it mounted (off-screen)
+	// during the transition. This prevents the flash where the old top card
+	// unmounts and the behind card is briefly visible at reduced scale.
+	const prevIndexRef = useRef<number | null>(null);
+	const prevIndex = prevIndexRef.current;
+
+	useEffect(() => {
+		// After render, update prevIndex for next swipe
+		prevIndexRef.current = currentIndex > 0 ? currentIndex - 1 : null;
+	}, [currentIndex]);
+
+	// Render up to 3 cards: [behind (zIndex 1), swiped (off-screen, zIndex 2), top (zIndex 3)]
+	// The top card must have the highest zIndex so it receives gesture events.
+	// The swiped card at zIndex 2 still covers the behind card during the transition.
 	const visibleCards = useMemo(() => {
-		const result: { card: Card; isTop: boolean }[] = [];
-		// Behind card first (renders underneath)
+		const result: { card: Card; isTop: boolean; zIndex: number }[] = [];
+		// Behind card (lowest z)
 		if (cards[currentIndex + 1]) {
-			result.push({ card: cards[currentIndex + 1], isTop: false });
+			result.push({ card: cards[currentIndex + 1], isTop: false, zIndex: 1 });
 		}
-		// Top card last (renders on top)
+		// Previously swiped card (still off-screen, covers behind card during transition)
+		if (prevIndex !== null && cards[prevIndex]) {
+			result.push({ card: cards[prevIndex], isTop: false, zIndex: 2 });
+		}
+		// Current top card (highest z — must be on top for gesture detection)
 		if (cards[currentIndex]) {
-			result.push({ card: cards[currentIndex], isTop: true });
+			result.push({ card: cards[currentIndex], isTop: true, zIndex: 3 });
 		}
 		return result;
-	}, [cards, currentIndex]);
+	}, [cards, currentIndex, prevIndex]);
 
 	const handleCardPress = (card: Card) => {
 		stackNavigation.navigate("LLCardForm", {
@@ -518,10 +530,10 @@ export default function ReviewScreen(_props: Props) {
 
 					{/* Card Stack */}
 					<View style={styles.cardArea}>
-						{visibleCards.map(({ card, isTop }) => (
+						{visibleCards.map(({ card, isTop, zIndex }) => (
 							<View
 								key={card.id}
-								style={[styles.cardWrapper, isTop ? { zIndex: 2 } : { zIndex: 1 }]}
+								style={[styles.cardWrapper, { zIndex }]}
 								pointerEvents={isTop ? "auto" : "none"}
 							>
 								<SwipeableCard

@@ -221,7 +221,7 @@ export default function TreeScreen({ navigation, route }: Props) {
 	const { t } = useLanguage();
 	const { treeId } = route.params;
 	const canvasRef = useRef<TreeCanvasHandle>(null);
-	const [treeLayout, setTreeLayout] = useState<TreeLayout>({ nodes: [], edges: [], width: 0, height: 0 });
+	const [treeLayout, setTreeLayout] = useState<TreeLayout>({ nodes: [], edges: [], familyEdges: [], width: 0, height: 0 });
 	const [isEmpty, setIsEmpty] = useState(true);
 	const [showMenu, setShowMenu] = useState(false);
 	const [showRenameModal, setShowRenameModal] = useState(false);
