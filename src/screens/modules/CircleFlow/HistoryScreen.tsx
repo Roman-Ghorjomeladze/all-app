@@ -449,6 +449,7 @@ export default function HistoryScreen() {
 					visible={showClearAllModal}
 					animationType="fade"
 					transparent
+					supportedOrientations={["portrait", "landscape"]}
 					onRequestClose={() => setShowClearAllModal(false)}
 				>
 					<Pressable style={styles.clearAllOverlay} onPress={() => setShowClearAllModal(false)}>

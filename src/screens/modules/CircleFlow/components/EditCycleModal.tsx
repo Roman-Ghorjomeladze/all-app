@@ -190,7 +190,7 @@ export default function EditCycleModal({ visible, cycle, onClose, onSave }: Edit
 	if (!cycle) return null;
 
 	return (
-		<Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+		<Modal visible={visible} animationType="slide" transparent supportedOrientations={["portrait", "landscape"]} onRequestClose={onClose}>
 			<View style={styles.overlay}>
 				<Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
 					<View style={styles.header}>

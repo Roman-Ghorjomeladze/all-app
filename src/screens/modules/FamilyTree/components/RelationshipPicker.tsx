@@ -148,7 +148,7 @@ export default function RelationshipPicker({
 	};
 
 	return (
-		<Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
+		<Modal visible={visible} transparent animationType="slide" supportedOrientations={["portrait", "landscape"]} onRequestClose={handleClose}>
 			<View style={styles.overlay}>
 				<View style={styles.content}>
 					<View style={styles.header}>

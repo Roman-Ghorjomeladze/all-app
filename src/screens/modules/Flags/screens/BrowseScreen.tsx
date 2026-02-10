@@ -108,6 +108,7 @@ export default function BrowseScreen() {
 				visible={selectedCountry !== null}
 				transparent
 				animationType="fade"
+				supportedOrientations={["portrait", "landscape"]}
 				onRequestClose={() => setSelectedCountry(null)}
 			>
 				<TouchableOpacity

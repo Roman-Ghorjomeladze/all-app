@@ -344,7 +344,7 @@ export default function TreeScreen({ navigation, route }: Props) {
 			<AddPersonFAB onPress={handleAddPerson} />
 
 			{/* Settings Menu Modal */}
-			<Modal visible={showMenu} transparent animationType="fade" onRequestClose={() => setShowMenu(false)}>
+			<Modal visible={showMenu} transparent animationType="fade" supportedOrientations={["portrait", "landscape"]} onRequestClose={() => setShowMenu(false)}>
 				<TouchableOpacity style={styles.menuOverlay} activeOpacity={1} onPress={() => setShowMenu(false)}>
 					<View style={styles.menuContent}>
 						{/* List */}
@@ -373,7 +373,7 @@ export default function TreeScreen({ navigation, route }: Props) {
 			</Modal>
 
 			{/* Rename Modal */}
-			<Modal visible={showRenameModal} transparent animationType="fade" onRequestClose={() => setShowRenameModal(false)}>
+			<Modal visible={showRenameModal} transparent animationType="fade" supportedOrientations={["portrait", "landscape"]} onRequestClose={() => setShowRenameModal(false)}>
 				<KeyboardAvoidingView style={styles.renameOverlay} behavior={Platform.OS === "ios" ? "padding" : undefined}>
 					<View style={styles.renameContent}>
 						<Text style={styles.renameTitle}>{t("ftRenameTree")}</Text>

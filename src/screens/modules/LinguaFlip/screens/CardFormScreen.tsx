@@ -406,7 +406,7 @@ export default function CardFormScreen({ navigation, route }: Props) {
 			</KeyboardAvoidingView>
 
 			{/* New Tag Modal */}
-			<Modal visible={showNewTagModal} transparent animationType="fade" onRequestClose={() => setShowNewTagModal(false)}>
+			<Modal visible={showNewTagModal} transparent animationType="fade" supportedOrientations={["portrait", "landscape"]} onRequestClose={() => setShowNewTagModal(false)}>
 				<KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === "ios" ? "padding" : undefined}>
 					<View style={styles.modalContent}>
 						<Text style={styles.modalTitle}>{t("llAddTag")}</Text>

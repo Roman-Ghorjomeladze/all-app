@@ -486,7 +486,7 @@ export default function LogScreen() {
 
 			{/* iOS Date Picker Modal */}
 			{Platform.OS === "ios" && (
-				<Modal visible={showDatePicker} animationType="fade" transparent onRequestClose={cancelDatePicker}>
+				<Modal visible={showDatePicker} animationType="fade" transparent supportedOrientations={["portrait", "landscape"]} onRequestClose={cancelDatePicker}>
 					<Pressable style={styles.pickerOverlay} onPress={cancelDatePicker}>
 						<Pressable style={styles.pickerModal} onPress={(e) => e.stopPropagation()}>
 							<View style={styles.pickerHeader}>

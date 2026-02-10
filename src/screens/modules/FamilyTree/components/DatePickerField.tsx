@@ -143,7 +143,7 @@ export default function DatePickerField({ label, value, onChange, placeholder }:
 			</View>
 
 			{showPicker && Platform.OS === "ios" && (
-				<Modal transparent animationType="slide">
+				<Modal transparent animationType="slide" supportedOrientations={["portrait", "landscape"]}>
 					<View style={styles.modalOverlay}>
 						<View style={styles.modalContent}>
 							<View style={styles.modalHeader}>

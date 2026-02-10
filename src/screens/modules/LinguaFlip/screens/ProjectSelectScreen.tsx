@@ -322,7 +322,7 @@ export default function ProjectSelectScreen({ navigation }: Props) {
 			/>
 
 			{/* Create Modal */}
-			<Modal visible={showCreateModal} transparent animationType="fade" onRequestClose={() => setShowCreateModal(false)}>
+			<Modal visible={showCreateModal} transparent animationType="fade" supportedOrientations={["portrait", "landscape"]} onRequestClose={() => setShowCreateModal(false)}>
 				<KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === "ios" ? "padding" : undefined}>
 					<View style={styles.modalContent}>
 						<Text style={styles.modalTitle}>{t("llCreateProject")}</Text>
@@ -357,7 +357,7 @@ export default function ProjectSelectScreen({ navigation }: Props) {
 			</Modal>
 
 			{/* Rename Modal */}
-			<Modal visible={showRenameModal} transparent animationType="fade" onRequestClose={() => setShowRenameModal(false)}>
+			<Modal visible={showRenameModal} transparent animationType="fade" supportedOrientations={["portrait", "landscape"]} onRequestClose={() => setShowRenameModal(false)}>
 				<KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === "ios" ? "padding" : undefined}>
 					<View style={styles.modalContent}>
 						<Text style={styles.modalTitle}>{t("llRenameProject")}</Text>

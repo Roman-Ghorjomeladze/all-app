@@ -327,6 +327,7 @@ export default function TreeSelectScreen({ navigation }: Props) {
 				visible={showCreateModal}
 				transparent
 				animationType="fade"
+				supportedOrientations={["portrait", "landscape"]}
 				onRequestClose={() => setShowCreateModal(false)}
 			>
 				<KeyboardAvoidingView
@@ -370,6 +371,7 @@ export default function TreeSelectScreen({ navigation }: Props) {
 				visible={showRenameModal}
 				transparent
 				animationType="fade"
+				supportedOrientations={["portrait", "landscape"]}
 				onRequestClose={() => setShowRenameModal(false)}
 			>
 				<KeyboardAvoidingView

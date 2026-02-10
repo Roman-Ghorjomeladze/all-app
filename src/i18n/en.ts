@@ -307,4 +307,8 @@ export default {
 	bdAddEvent: "Add Event",
 	bdEditEvent: "Edit Event",
 	bdDeleteConfirm: "Delete Event",
+	bdSearch: "Search",
+	bdSearchPlaceholder: "Search by name, notes, or date...",
+	bdAll: "All",
+	bdNoResults: "No results found",
 };

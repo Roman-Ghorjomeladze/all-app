@@ -308,4 +308,8 @@ export default {
 	bdAddEvent: "მოვლენის დამატება",
 	bdEditEvent: "მოვლენის რედაქტირება",
 	bdDeleteConfirm: "მოვლენის წაშლა",
+	bdSearch: "ძებნა",
+	bdSearchPlaceholder: "ძებნა სახელით, ჩანაწერით ან თარიღით...",
+	bdAll: "ყველა",
+	bdNoResults: "შედეგები არ მოიძებნა",
 };

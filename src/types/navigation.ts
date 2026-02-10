@@ -20,6 +20,7 @@ export type BirthdaysStackParamList = {
 export type BirthdaysTabParamList = {
 	BirthdaysList: undefined;
 	BirthdaysCalendar: undefined;
+	BirthdaysSearch: undefined;
 };
 
 export type CircleFlowTabParamList = {

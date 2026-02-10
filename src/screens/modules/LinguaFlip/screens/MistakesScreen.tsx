@@ -258,6 +258,7 @@ export default function MistakesScreen(_props: Props) {
 				visible={!!selectedMistake}
 				transparent
 				animationType="fade"
+				supportedOrientations={["portrait", "landscape"]}
 				onRequestClose={() => setSelectedMistake(null)}
 			>
 				<TouchableOpacity

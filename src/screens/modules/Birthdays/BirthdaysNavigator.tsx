@@ -5,6 +5,7 @@ import { Text, View, StyleSheet } from "react-native";
 import { BirthdaysStackParamList, BirthdaysTabParamList } from "../../../types/navigation";
 import ListScreen from "./screens/ListScreen";
 import CalendarScreen from "./screens/CalendarScreen";
+import SearchScreen from "./screens/SearchScreen";
 import EventFormScreen from "./screens/EventFormScreen";
 import { useColors, Colors } from "./theme";
 import { useLanguage } from "../../../i18n";
@@ -54,6 +55,14 @@ function TabNavigator() {
 				options={{
 					tabBarLabel: t("bdCalendar"),
 					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon={"\u{1F4C5}"} />,
+				}}
+			/>
+			<Tab.Screen
+				name="BirthdaysSearch"
+				component={SearchScreen}
+				options={{
+					tabBarLabel: t("bdSearch"),
+					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon={"\u{1F50D}"} />,
 				}}
 			/>
 		</Tab.Navigator>

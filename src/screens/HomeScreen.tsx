@@ -101,6 +101,7 @@ export default function HomeScreen({ navigation }: Props) {
 				visible={settingsVisible}
 				transparent
 				animationType="fade"
+				supportedOrientations={["portrait", "landscape"]}
 				onRequestClose={() => setSettingsVisible(false)}
 			>
 				<TouchableOpacity
