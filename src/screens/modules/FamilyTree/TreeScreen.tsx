@@ -3,7 +3,6 @@ import {
 	View,
 	Text,
 	StyleSheet,
-	SafeAreaView,
 	TouchableOpacity,
 	Modal,
 	TextInput,
@@ -11,15 +10,16 @@ import {
 	KeyboardAvoidingView,
 	Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { FamilyTreeStackParamList } from "../../../types/navigation";
-import { useColors, Colors, spacing } from "./theme";
+import { useColors, Colors, spacing, typography } from "./theme";
 import { useLanguage } from "../../../i18n";
 import { getTreeData, renameTree, deleteTree, initDatabase } from "./database";
 import { computeLayout, TreeLayout } from "./utils/treeLayout";
 import TreeCanvas, { TreeCanvasHandle } from "./components/TreeCanvas";
-import AddPersonFAB from "./components/AddPersonFAB";
 
 type Props = NativeStackScreenProps<FamilyTreeStackParamList, "FamilyTreeMain">;
 
@@ -33,37 +33,22 @@ function useStyles(colors: Colors) {
 			flexDirection: "row",
 			justifyContent: "space-between",
 			alignItems: "center",
-			paddingHorizontal: spacing.md,
-			paddingVertical: 10,
-			backgroundColor: colors.cardBackground,
-			borderBottomWidth: 1,
-			borderBottomColor: colors.border,
-		},
-		backButton: {
-			padding: 8,
-			marginLeft: -8,
-		},
-		backText: {
-			fontSize: 32,
-			color: colors.accent,
-			fontWeight: "300",
-			marginTop: -4,
+			paddingHorizontal: spacing.lg,
+			paddingVertical: spacing.md,
 		},
 		headerTitle: {
-			fontSize: 17,
-			fontWeight: "600",
+			...typography.largeTitle,
 			color: colors.textPrimary,
 			flex: 1,
-			textAlign: "center",
-			marginHorizontal: spacing.sm,
+			marginRight: spacing.sm,
 		},
-		menuButton: {
-			padding: 8,
-			marginRight: -8,
+		headerButtons: {
+			flexDirection: "row",
+			alignItems: "center",
+			gap: spacing.xs,
 		},
-		menuIcon: {
-			fontSize: 22,
-			color: colors.accent,
+		headerButton: {
+			padding: spacing.xs,
 		},
 		emptyContainer: {
 			flex: 1,
@@ -303,18 +288,20 @@ export default function TreeScreen({ navigation, route }: Props) {
 	);
 
 	return (
-		<SafeAreaView style={styles.safeArea}>
+		<SafeAreaView style={styles.safeArea} edges={["top"]}>
 			{/* Header */}
 			<View style={styles.header}>
-				<TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-					<Text style={styles.backText}>‹</Text>
-				</TouchableOpacity>
 				<Text style={styles.headerTitle} numberOfLines={1}>
 					{treeName || t("ftModuleName")}
 				</Text>
-				<TouchableOpacity style={styles.menuButton} onPress={() => setShowMenu(true)}>
-					<Text style={styles.menuIcon}>☰</Text>
-				</TouchableOpacity>
+				<View style={styles.headerButtons}>
+					<TouchableOpacity style={styles.headerButton} onPress={handleAddPerson} activeOpacity={0.7}>
+						<Ionicons name="add-circle" size={32} color={colors.accent} />
+					</TouchableOpacity>
+					<TouchableOpacity style={styles.headerButton} onPress={() => setShowMenu(true)} activeOpacity={0.7}>
+						<Ionicons name="ellipsis-vertical" size={24} color={colors.accent} />
+					</TouchableOpacity>
+				</View>
 			</View>
 
 			{/* Canvas or Empty State */}
@@ -339,9 +326,6 @@ export default function TreeScreen({ navigation, route }: Props) {
 					<Text style={styles.recenterIcon}>⊕</Text>
 				</TouchableOpacity>
 			)}
-
-			{/* FAB */}
-			<AddPersonFAB onPress={handleAddPerson} />
 
 			{/* Settings Menu Modal */}
 			<Modal visible={showMenu} transparent animationType="fade" supportedOrientations={["portrait", "landscape"]} onRequestClose={() => setShowMenu(false)}>

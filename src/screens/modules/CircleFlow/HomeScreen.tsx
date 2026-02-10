@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import CircleWheel from "./components/CircleWheel";
 import CalendarGrid from "./components/CalendarGrid";
@@ -45,8 +46,23 @@ function useStyles(colors: Colors) {
 			color: colors.textSecondary,
 		},
 		header: {
+			flexDirection: "row",
+			justifyContent: "space-between",
 			alignItems: "center",
-			paddingTop: spacing.lg,
+			paddingHorizontal: spacing.lg,
+			paddingVertical: spacing.md,
+		},
+		headerTitle: {
+			...typography.largeTitle,
+			color: colors.textPrimary,
+			flex: 1,
+			marginRight: spacing.sm,
+		},
+		addButton: {
+			padding: spacing.xs,
+		},
+		dateHeader: {
+			alignItems: "center",
 			paddingBottom: spacing.md,
 		},
 		dateText: {
@@ -293,7 +309,7 @@ export default function HomeScreen() {
 
 	if (isLoading) {
 		return (
-			<SafeAreaView style={styles.container}>
+			<SafeAreaView style={styles.container} edges={["top"]}>
 				<View style={styles.loadingContainer}>
 					<Text style={styles.loadingText}>{t("loading")}</Text>
 				</View>
@@ -306,10 +322,26 @@ export default function HomeScreen() {
 	const daysUntilPeriod = getDaysUntilNextPeriod(settings?.last_period_start || null, cycleLength);
 
 	return (
-		<SafeAreaView style={styles.container}>
+		<SafeAreaView style={styles.container} edges={["top"]}>
+			{/* Header */}
+			<View style={styles.header}>
+				<Text style={styles.headerTitle} numberOfLines={1}>{t("cfTitle")}</Text>
+				<TouchableOpacity
+					onPress={cycleInfo?.isPeriodActive ? handleEndPeriod : handleStartPeriod}
+					activeOpacity={0.7}
+					style={styles.addButton}
+				>
+					<Ionicons
+						name={cycleInfo?.isPeriodActive ? "stop-circle" : "add-circle"}
+						size={32}
+						color={colors.period}
+					/>
+				</TouchableOpacity>
+			</View>
+
 			<ScrollView contentContainerStyle={styles.scrollContent}>
-				{/* Header */}
-				<View style={styles.header}>
+				{/* Date Info */}
+				<View style={styles.dateHeader}>
 					<Text style={styles.dateText}>{formatDisplayDate(today)}</Text>
 					{cycleInfo && cycleInfo.currentDay > 0 && (
 						<Text style={styles.cycleDay}>

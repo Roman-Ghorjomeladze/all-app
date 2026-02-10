@@ -6,11 +6,11 @@ import {
 	FlatList,
 	Modal,
 	TouchableOpacity,
-	SafeAreaView,
 	Dimensions,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Continent, countries, Country } from "../data/countries";
-import { useColors, Colors, spacing } from "../theme";
+import { useColors, Colors, spacing, typography } from "../theme";
 import { useLanguage } from "../i18n";
 import ContinentFilter from "../components/ContinentFilter";
 import FlagCard from "../components/FlagCard";
@@ -27,19 +27,21 @@ function useStyles(colors: Colors) {
 			backgroundColor: colors.background,
 		},
 		header: {
+			flexDirection: "row",
+			justifyContent: "space-between",
+			alignItems: "center",
 			paddingHorizontal: spacing.lg,
-			paddingTop: spacing.md,
-			paddingBottom: spacing.xs,
+			paddingVertical: spacing.md,
 		},
 		title: {
-			fontSize: 34,
-			fontWeight: "700",
+			...typography.largeTitle,
 			color: colors.textPrimary,
+			flex: 1,
+			marginRight: spacing.sm,
 		},
 		subtitle: {
-			fontSize: 15,
+			...typography.subhead,
 			color: colors.textSecondary,
-			marginTop: 2,
 		},
 		listContainer: {
 			flex: 1,
@@ -77,9 +79,9 @@ export default function BrowseScreen() {
 	};
 
 	return (
-		<SafeAreaView style={styles.safeArea}>
+		<SafeAreaView style={styles.safeArea} edges={["top"]}>
 			<View style={styles.header}>
-				<Text style={styles.title}>{t("flModuleName")}</Text>
+				<Text style={styles.title} numberOfLines={1}>{t("flModuleName")}</Text>
 				<Text style={styles.subtitle}>
 					{t("flCountries", { count: filteredCountries.length })}
 				</Text>

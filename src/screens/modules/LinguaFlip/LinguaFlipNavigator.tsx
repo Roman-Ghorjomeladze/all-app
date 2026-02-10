@@ -69,10 +69,7 @@ function TabNavigator({ route }: TabsProps) {
 			screenOptions={{
 				tabBarActiveTintColor: colors.tabActive,
 				tabBarInactiveTintColor: colors.tabInactive,
-				headerShown: true,
-				headerStyle: { backgroundColor: colors.cardBackground },
-				headerTintColor: colors.textPrimary,
-				headerTitleStyle: { fontWeight: "600" },
+				headerShown: false,
 				tabBarStyle: styles.tabBar,
 				tabBarLabelStyle: layoutStyles.tabLabel,
 			}}

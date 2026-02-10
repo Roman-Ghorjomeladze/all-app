@@ -4,7 +4,6 @@ import {
 	Text,
 	FlatList,
 	StyleSheet,
-	SafeAreaView,
 	TouchableOpacity,
 	Alert,
 	Modal,
@@ -12,10 +11,12 @@ import {
 	KeyboardAvoidingView,
 	Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { LinguaFlipStackParamList } from "../../../../types/navigation";
-import { useColors, Colors, spacing } from "../theme";
+import { useColors, Colors, spacing, typography } from "../theme";
 import { useLanguage } from "../i18n";
 import { getAllProjects, createProject, renameProject, deleteProject, ProjectWithCount } from "../database";
 
@@ -31,31 +32,17 @@ function useStyles(colors: Colors) {
 			flexDirection: "row",
 			justifyContent: "space-between",
 			alignItems: "center",
-			paddingHorizontal: spacing.md,
-			paddingVertical: 10,
-			backgroundColor: colors.cardBackground,
-			borderBottomWidth: 1,
-			borderBottomColor: colors.border,
-		},
-		headerButton: {
-			padding: 8,
-			margin: -8,
-		},
-		backText: {
-			fontSize: 32,
-			color: colors.accent,
-			fontWeight: "300",
-			marginTop: -4,
+			paddingHorizontal: spacing.lg,
+			paddingVertical: spacing.md,
 		},
 		headerTitle: {
-			fontSize: 17,
-			fontWeight: "600",
+			...typography.largeTitle,
 			color: colors.textPrimary,
+			flex: 1,
+			marginRight: spacing.sm,
 		},
-		addText: {
-			fontSize: 28,
-			color: colors.accent,
-			fontWeight: "400",
+		addButton: {
+			padding: spacing.xs,
 		},
 		listContent: {
 			padding: spacing.md,
@@ -288,21 +275,12 @@ export default function ProjectSelectScreen({ navigation }: Props) {
 	);
 
 	return (
-		<SafeAreaView style={styles.safeArea}>
+		<SafeAreaView style={styles.safeArea} edges={["top"]}>
 			{/* Header */}
 			<View style={styles.header}>
-				<TouchableOpacity
-					style={styles.headerButton}
-					onPress={() => navigation.getParent()?.goBack()}
-				>
-					<Text style={styles.backText}>{"\u2039"}</Text>
-				</TouchableOpacity>
-				<Text style={styles.headerTitle}>{t("llProjects")}</Text>
-				<TouchableOpacity
-					style={styles.headerButton}
-					onPress={() => setShowCreateModal(true)}
-				>
-					<Text style={styles.addText}>+</Text>
+				<Text style={styles.headerTitle} numberOfLines={1}>{t("llProjects")}</Text>
+				<TouchableOpacity onPress={() => setShowCreateModal(true)} activeOpacity={0.7} style={styles.addButton}>
+					<Ionicons name="add-circle" size={32} color={colors.accent} />
 				</TouchableOpacity>
 			</View>
 

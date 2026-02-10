@@ -24,6 +24,7 @@ const modules: Module[] = [
 	{ id: "3", name: "Flags", color: "#1A5276", icon: "\u{1F1EC}\u{1F1EA}", route: "Flags" },
 	{ id: "4", name: "LinguaFlip", color: "#008B8B", icon: "\u{1F30E}", route: "LinguaFlip" },
 	{ id: "5", name: "Birthdays", color: "#E91E63", icon: "\u{1F382}", route: "Birthdays" },
+	{ id: "6", name: "Todo", color: "#FF8C00", icon: "\u{2705}", route: "Todo" },
 ];
 
 function getHomeColors(mode: "light" | "dark") {

@@ -9,6 +9,7 @@ import FamilyTreeNavigator from "../screens/modules/FamilyTree/FamilyTreeNavigat
 import FlagsNavigator from "../screens/modules/Flags/FlagsNavigator";
 import LinguaFlipNavigator from "../screens/modules/LinguaFlip/LinguaFlipNavigator";
 import BirthdaysNavigator from "../screens/modules/Birthdays/BirthdaysNavigator";
+import TodoNavigator from "../screens/modules/Todo/TodoNavigator";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -38,11 +39,12 @@ export default function RootNavigator() {
 				}}
 			>
 				<Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-				<Stack.Screen name="CircleFlow" component={CircleFlowNavigator} options={{ title: "CircleFlow" }} />
+				<Stack.Screen name="CircleFlow" component={CircleFlowNavigator} options={{ headerShown: false }} />
 				<Stack.Screen name="FamilyTree" component={FamilyTreeNavigator} options={{ headerShown: false }} />
-				<Stack.Screen name="Flags" component={FlagsNavigator} options={{ title: "Flags" }} />
+				<Stack.Screen name="Flags" component={FlagsNavigator} options={{ headerShown: false }} />
 				<Stack.Screen name="LinguaFlip" component={LinguaFlipNavigator} options={{ headerShown: false }} />
 				<Stack.Screen name="Birthdays" component={BirthdaysNavigator} options={{ headerShown: false }} />
+				<Stack.Screen name="Todo" component={TodoNavigator} options={{ headerShown: false }} />
 			</Stack.Navigator>
 		</NavigationContainer>
 	);

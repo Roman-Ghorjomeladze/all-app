@@ -6,6 +6,7 @@ export type RootStackParamList = {
 	Flags: undefined;
 	LinguaFlip: undefined;
 	Birthdays: undefined;
+	Todo: undefined;
 	Module4: undefined;
 	Module5: undefined;
 };
@@ -67,4 +68,20 @@ export type LLQuizStackParamList = {
 	LLQuizStart: { projectId: number };
 	LLQuizPlay: { projectId: number; mode: "easy" | "medium" | "hard"; questionCount: number; tagId: number | null };
 	LLQuizResult: { correct: number; total: number; mistakeCount: number };
+};
+
+export type TodoStackParamList = {
+	TodoTabs: undefined;
+	TodoTaskForm:
+		| { mode: "create"; categoryId?: number; dueDate?: string }
+		| { mode: "edit"; taskId: number };
+	TodoCategoryForm:
+		| { mode: "create" }
+		| { mode: "edit"; categoryId: number };
+};
+
+export type TodoTabParamList = {
+	TodoTasks: undefined;
+	TodoCategories: undefined;
+	TodoSearch: undefined;
 };

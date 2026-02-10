@@ -13,9 +13,10 @@ import { scheduleOnRN } from "react-native-worklets";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useFocusEffect, useRoute, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { BottomTabScreenProps, BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { LinguaFlipTabParamList, LinguaFlipStackParamList } from "../../../../types/navigation";
-import { useColors, Colors, spacing } from "../theme";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useColors, Colors, spacing, typography } from "../theme";
 import { useLanguage } from "../i18n";
 import {
 	getCardsByProject,
@@ -41,36 +42,34 @@ function useStyles(colors: Colors) {
 	return useMemo(
 		() =>
 			StyleSheet.create({
+				safeArea: {
+					flex: 1,
+					backgroundColor: colors.background,
+				},
 				container: {
 					flex: 1,
 					backgroundColor: colors.background,
 				},
-				navHeaderButton: {
-					paddingHorizontal: 6,
-					paddingVertical: 4,
+				header: {
+					flexDirection: "row",
+					justifyContent: "space-between",
+					alignItems: "center",
+					paddingHorizontal: spacing.lg,
+					paddingVertical: spacing.md,
 				},
-				navHeaderRightButtons: {
+				headerTitle: {
+					...typography.largeTitle,
+					color: colors.textPrimary,
+					flex: 1,
+					marginRight: spacing.sm,
+				},
+				headerButtons: {
 					flexDirection: "row",
 					alignItems: "center",
-					gap: 8,
+					gap: spacing.xs,
 				},
-				navManageText: {
-					fontSize: 22,
-					color: colors.accent,
-				},
-				navAddText: {
-					fontSize: 28,
-					color: colors.accent,
-					fontWeight: "400",
-				},
-				navBackText: {
-					fontSize: 16,
-					color: colors.accent,
-					fontWeight: "500",
-				},
-				navSettingsText: {
-					fontSize: 22,
-					color: colors.accent,
+				headerButton: {
+					padding: spacing.xs,
 				},
 				toggleRow: {
 					flexDirection: "row",
@@ -259,7 +258,6 @@ export default function ReviewScreen(_props: Props) {
 	const styles = useStyles(colors);
 	const { t } = useLanguage();
 	const stackNavigation = useNavigation<NativeStackNavigationProp<LinguaFlipStackParamList>>();
-	const tabNavigation = useNavigation<BottomTabNavigationProp<LinguaFlipTabParamList>>();
 	const route = useRoute();
 	const projectId = (route.params as any)?.projectId as number;
 
@@ -410,55 +408,29 @@ export default function ReviewScreen(_props: Props) {
 		]);
 	}, [t, projectId, loadData]);
 
-	// Update header buttons based on manage mode
-	useEffect(() => {
-		if (showManage) {
-			tabNavigation.setOptions({
-				headerLeft: () => (
-					<TouchableOpacity style={styles.navHeaderButton} onPress={() => setShowManage(false)}>
-						<Text style={styles.navBackText}>
-							{"\u2039"} {t("llReview")}
-						</Text>
-					</TouchableOpacity>
-				),
-				headerRight: () => (
-					<View style={styles.navHeaderRightButtons}>
-						<TouchableOpacity style={styles.navHeaderButton} onPress={handleResetAllStats}>
-							<Ionicons name="trash-outline" size={24} color="red" />
-						</TouchableOpacity>
-						<TouchableOpacity
-							style={styles.navHeaderButton}
-							onPress={() => stackNavigation.navigate("LLCardForm", { projectId, mode: "create" })}
-						>
-							<Ionicons name="add-circle-outline" size={24} color="green" />
-						</TouchableOpacity>
-					</View>
-				),
-				title: t("llManageCards"),
-			});
-		} else {
-			tabNavigation.setOptions({
-				headerLeft: () => (
-					<TouchableOpacity style={styles.navHeaderButton} onPress={() => setShowManage(true)}>
-						<Text style={styles.navManageText}>{"\u2630"}</Text>
-					</TouchableOpacity>
-				),
-				headerRight: () => (
-					<TouchableOpacity
-						style={styles.navHeaderButton}
-						onPress={() => stackNavigation.navigate("LLCardForm", { projectId, mode: "create" })}
-					>
-						<Ionicons name="add-circle-outline" size={24} color="green" />
-					</TouchableOpacity>
-				),
-				title: t("llReview"),
-			});
-		}
-	}, [showManage, t, projectId, stackNavigation, tabNavigation, handleResetAllStats, styles]);
-
 	if (showManage) {
 		return (
-			<View style={styles.container}>
+			<SafeAreaView style={styles.safeArea} edges={["top"]}>
+				{/* Header — Manage mode */}
+				<View style={styles.header}>
+					<Text style={styles.headerTitle} numberOfLines={1}>{t("llManageCards")}</Text>
+					<View style={styles.headerButtons}>
+						<TouchableOpacity style={styles.headerButton} onPress={handleResetAllStats} activeOpacity={0.7}>
+							<Ionicons name="trash-outline" size={24} color={colors.danger} />
+						</TouchableOpacity>
+						<TouchableOpacity
+							style={styles.headerButton}
+							onPress={() => stackNavigation.navigate("LLCardForm", { projectId, mode: "create" })}
+							activeOpacity={0.7}
+						>
+							<Ionicons name="add-circle" size={32} color={colors.accent} />
+						</TouchableOpacity>
+						<TouchableOpacity style={styles.headerButton} onPress={() => setShowManage(false)} activeOpacity={0.7}>
+							<Ionicons name="close-circle" size={28} color={colors.textSecondary} />
+						</TouchableOpacity>
+					</View>
+				</View>
+
 				<TagFilter tags={tags} selectedTagId={selectedTagId} onSelect={setSelectedTagId} />
 
 				<FlatList
@@ -480,12 +452,29 @@ export default function ReviewScreen(_props: Props) {
 						</View>
 					}
 				/>
-			</View>
+			</SafeAreaView>
 		);
 	}
 
 	return (
-		<View style={styles.container}>
+		<SafeAreaView style={styles.safeArea} edges={["top"]}>
+			{/* Header — Review mode */}
+			<View style={styles.header}>
+				<Text style={styles.headerTitle} numberOfLines={1}>{t("llReview")}</Text>
+				<View style={styles.headerButtons}>
+					<TouchableOpacity
+						style={styles.headerButton}
+						onPress={() => stackNavigation.navigate("LLCardForm", { projectId, mode: "create" })}
+						activeOpacity={0.7}
+					>
+						<Ionicons name="add-circle" size={32} color={colors.accent} />
+					</TouchableOpacity>
+					<TouchableOpacity style={styles.headerButton} onPress={() => setShowManage(true)} activeOpacity={0.7}>
+						<Ionicons name="list" size={24} color={colors.accent} />
+					</TouchableOpacity>
+				</View>
+			</View>
+
 			{/* Tag filter */}
 			<TagFilter tags={tags} selectedTagId={selectedTagId} onSelect={setSelectedTagId} />
 
@@ -557,6 +546,6 @@ export default function ReviewScreen(_props: Props) {
 					</View>
 				</>
 			) : null}
-		</View>
+		</SafeAreaView>
 	);
 }

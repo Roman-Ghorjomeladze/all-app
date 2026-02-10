@@ -42,7 +42,7 @@ export default function CircleFlowNavigator() {
 				name="CircleFlowHome"
 				component={HomeScreen}
 				options={{
-					tabBarLabel: t("tabHome"),
+					tabBarLabel: t("cfHome"),
 					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon="🏠" />,
 				}}
 			/>
@@ -50,7 +50,7 @@ export default function CircleFlowNavigator() {
 				name="CircleFlowLog"
 				component={LogScreen}
 				options={{
-					tabBarLabel: t("tabLog"),
+					tabBarLabel: t("cfLog"),
 					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon="📝" />,
 				}}
 			/>
@@ -58,7 +58,7 @@ export default function CircleFlowNavigator() {
 				name="CircleFlowHistory"
 				component={HistoryScreen}
 				options={{
-					tabBarLabel: t("tabHistory"),
+					tabBarLabel: t("cfHistory"),
 					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon="📊" />,
 				}}
 			/>
