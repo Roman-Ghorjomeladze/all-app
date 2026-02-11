@@ -247,6 +247,13 @@ export async function deleteTask(id: number): Promise<void> {
 	await database.runAsync("DELETE FROM td_tasks WHERE id = ?", id);
 }
 
+export async function deleteMultipleTasks(ids: number[]): Promise<void> {
+	if (ids.length === 0) return;
+	const database = await getDatabase();
+	const placeholders = ids.map(() => "?").join(",");
+	await database.runAsync(`DELETE FROM td_tasks WHERE id IN (${placeholders})`, ...ids);
+}
+
 export async function toggleTaskCompleted(id: number, completed: boolean): Promise<void> {
 	const database = await getDatabase();
 	await database.runAsync(

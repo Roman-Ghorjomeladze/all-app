@@ -22,6 +22,7 @@ import {
 	getAllCategories,
 	toggleTaskCompleted,
 	createNextRecurrence,
+	deleteTask,
 } from "../database";
 import { cancelTaskNotifications, rescheduleTaskNotifications } from "../utils/notifications";
 import { useColors, Colors, spacing, typography } from "../theme";
@@ -107,6 +108,12 @@ export default function SearchScreen() {
 		} else if (task.reminder_type !== "none") {
 			await rescheduleTaskNotifications(task);
 		}
+		doSearch();
+	}, [doSearch]);
+
+	const handleDelete = useCallback(async (task: TaskWithCategory) => {
+		await cancelTaskNotifications(task.notification_id_at_time, task.notification_id_day_before);
+		await deleteTask(task.id);
 		doSearch();
 	}, [doSearch]);
 
@@ -215,6 +222,7 @@ export default function SearchScreen() {
 							task={item}
 							onPress={handlePress}
 							onToggleComplete={handleToggleComplete}
+							onDelete={handleDelete}
 						/>
 					)}
 					contentContainerStyle={styles.listContent}

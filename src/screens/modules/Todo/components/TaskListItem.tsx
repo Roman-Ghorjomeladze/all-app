@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useMemo, useCallback } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TaskWithCategory } from "../database";
 import { useColors, Colors, spacing, typography } from "../theme";
@@ -11,6 +11,10 @@ type Props = {
 	task: TaskWithCategory;
 	onPress: (task: TaskWithCategory) => void;
 	onToggleComplete: (task: TaskWithCategory) => void;
+	onDelete: (task: TaskWithCategory) => void;
+	selectionMode?: boolean;
+	isSelected?: boolean;
+	onToggleSelect?: (task: TaskWithCategory) => void;
 };
 
 function formatDueDate(dueDate: string, t: (key: string, params?: Record<string, string>) => string): { text: string; isOverdue: boolean; isToday: boolean } {
@@ -32,7 +36,7 @@ function formatDueDate(dueDate: string, t: (key: string, params?: Record<string,
 	};
 }
 
-export default function TaskListItem({ task, onPress, onToggleComplete }: Props) {
+export default function TaskListItem({ task, onPress, onToggleComplete, onDelete, selectionMode, isSelected, onToggleSelect }: Props) {
 	const colors = useColors();
 	const styles = useStyles(colors);
 	const { t } = useLanguage();
@@ -41,28 +45,72 @@ export default function TaskListItem({ task, onPress, onToggleComplete }: Props)
 	const dueInfo = task.due_date ? formatDueDate(task.due_date, t) : null;
 	const hasSubtasks = task.subtask_count > 0;
 
+	const handleDelete = useCallback(() => {
+		Alert.alert(t("tdDelete"), t("tdDeleteTaskConfirm"), [
+			{ text: t("cancel"), style: "cancel" },
+			{
+				text: t("tdDelete"),
+				style: "destructive",
+				onPress: () => onDelete(task),
+			},
+		]);
+	}, [onDelete, task, t]);
+
+	const handlePress = useCallback(() => {
+		if (selectionMode && onToggleSelect) {
+			onToggleSelect(task);
+		} else {
+			onPress(task);
+		}
+	}, [selectionMode, onToggleSelect, onPress, task]);
+
+	const handleLongPress = useCallback(() => {
+		if (!selectionMode && onToggleSelect) {
+			onToggleSelect(task);
+		}
+	}, [selectionMode, onToggleSelect, task]);
+
 	return (
 		<TouchableOpacity
 			style={styles.container}
-			onPress={() => onPress(task)}
+			onPress={handlePress}
+			onLongPress={handleLongPress}
 			activeOpacity={0.7}
 		>
-			{/* Checkbox */}
-			<TouchableOpacity
-				onPress={() => onToggleComplete(task)}
-				activeOpacity={0.7}
-				style={styles.checkboxArea}
-				hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-			>
-				<View
-					style={[
-						styles.checkbox,
-						isDone && { backgroundColor: colors.checkboxFilled, borderColor: colors.checkboxFilled },
-					]}
+			{/* Selection checkbox or normal checkbox */}
+			{selectionMode ? (
+				<TouchableOpacity
+					onPress={() => onToggleSelect?.(task)}
+					activeOpacity={0.7}
+					style={styles.checkboxArea}
+					hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
 				>
-					{isDone && <Ionicons name="checkmark" size={14} color={colors.white} />}
-				</View>
-			</TouchableOpacity>
+					<View
+						style={[
+							styles.selectionCheckbox,
+							isSelected && { backgroundColor: colors.accent, borderColor: colors.accent },
+						]}
+					>
+						{isSelected && <Ionicons name="checkmark" size={14} color={colors.white} />}
+					</View>
+				</TouchableOpacity>
+			) : (
+				<TouchableOpacity
+					onPress={() => onToggleComplete(task)}
+					activeOpacity={0.7}
+					style={styles.checkboxArea}
+					hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+				>
+					<View
+						style={[
+							styles.checkbox,
+							isDone && { backgroundColor: colors.checkboxFilled, borderColor: colors.checkboxFilled },
+						]}
+					>
+						{isDone && <Ionicons name="checkmark" size={14} color={colors.white} />}
+					</View>
+				</TouchableOpacity>
+			)}
 
 			{/* Content */}
 			<View style={styles.content}>
@@ -73,7 +121,18 @@ export default function TaskListItem({ task, onPress, onToggleComplete }: Props)
 					>
 						{task.title}
 					</Text>
-					<PriorityIndicator priority={task.priority} />
+					<View style={styles.topRowRight}>
+						<PriorityIndicator priority={task.priority} />
+						{!selectionMode && (
+							<TouchableOpacity
+								onPress={handleDelete}
+								activeOpacity={0.7}
+								hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
+							>
+								<Ionicons name="trash-outline" size={16} color={colors.textSecondary} />
+							</TouchableOpacity>
+						)}
+					</View>
 				</View>
 
 				<View style={styles.metaRow}>
@@ -134,6 +193,15 @@ function useStyles(colors: Colors) {
 					justifyContent: "center",
 					alignItems: "center",
 				},
+				selectionCheckbox: {
+					width: 22,
+					height: 22,
+					borderRadius: 6,
+					borderWidth: 2,
+					borderColor: colors.checkboxBorder,
+					justifyContent: "center",
+					alignItems: "center",
+				},
 				content: {
 					flex: 1,
 				},
@@ -141,6 +209,11 @@ function useStyles(colors: Colors) {
 					flexDirection: "row",
 					alignItems: "center",
 					justifyContent: "space-between",
+				},
+				topRowRight: {
+					flexDirection: "row",
+					alignItems: "center",
+					gap: 8,
 				},
 				title: {
 					...typography.body,

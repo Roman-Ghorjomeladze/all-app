@@ -7,6 +7,7 @@ export type RootStackParamList = {
 	LinguaFlip: undefined;
 	Birthdays: undefined;
 	Todo: undefined;
+	PocketManager: undefined;
 	Module4: undefined;
 	Module5: undefined;
 };
@@ -84,4 +85,21 @@ export type TodoTabParamList = {
 	TodoTasks: undefined;
 	TodoCategories: undefined;
 	TodoSearch: undefined;
+};
+
+export type PocketManagerStackParamList = {
+	PocketManagerTabs: undefined;
+	PMExpenseForm:
+		| { mode: "create"; projectId?: number }
+		| { mode: "edit"; expenseId: number };
+	PMProjectForm:
+		| { mode: "create" }
+		| { mode: "edit"; projectId: number };
+	PMProjectDetail: { projectId: number };
+};
+
+export type PocketManagerTabParamList = {
+	PMDashboard: undefined;
+	PMExpenses: undefined;
+	PMProjects: undefined;
 };

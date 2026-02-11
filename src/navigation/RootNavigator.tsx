@@ -10,6 +10,7 @@ import FlagsNavigator from "../screens/modules/Flags/FlagsNavigator";
 import LinguaFlipNavigator from "../screens/modules/LinguaFlip/LinguaFlipNavigator";
 import BirthdaysNavigator from "../screens/modules/Birthdays/BirthdaysNavigator";
 import TodoNavigator from "../screens/modules/Todo/TodoNavigator";
+import PocketManagerNavigator from "../screens/modules/PocketManager/PocketManagerNavigator";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -45,6 +46,7 @@ export default function RootNavigator() {
 				<Stack.Screen name="LinguaFlip" component={LinguaFlipNavigator} options={{ headerShown: false }} />
 				<Stack.Screen name="Birthdays" component={BirthdaysNavigator} options={{ headerShown: false }} />
 				<Stack.Screen name="Todo" component={TodoNavigator} options={{ headerShown: false }} />
+				<Stack.Screen name="PocketManager" component={PocketManagerNavigator} options={{ headerShown: false }} />
 			</Stack.Navigator>
 		</NavigationContainer>
 	);

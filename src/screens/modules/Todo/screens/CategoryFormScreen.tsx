@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
@@ -72,6 +72,10 @@ export default function CategoryFormScreen() {
 
 	return (
 		<SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+			<KeyboardAvoidingView
+				style={{ flex: 1 }}
+				behavior={Platform.OS === "ios" ? "padding" : undefined}
+			>
 			{/* Header */}
 			<View style={styles.header}>
 				<TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7} style={styles.headerBtn}>
@@ -128,6 +132,7 @@ export default function CategoryFormScreen() {
 
 				<View style={{ height: 40 }} />
 			</ScrollView>
+			</KeyboardAvoidingView>
 		</SafeAreaView>
 	);
 }

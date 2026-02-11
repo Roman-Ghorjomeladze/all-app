@@ -9,6 +9,7 @@ import {
 	Alert,
 	Switch,
 	Platform,
+	KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -188,6 +189,10 @@ export default function EventFormScreen() {
 
 	return (
 		<SafeAreaView style={styles.safeArea}>
+			<KeyboardAvoidingView
+				style={{ flex: 1 }}
+				behavior={Platform.OS === "ios" ? "padding" : undefined}
+			>
 			<View style={styles.header}>
 				<TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
 					<Ionicons name="close" size={28} color={colors.textPrimary} />
@@ -314,6 +319,7 @@ export default function EventFormScreen() {
 					</TouchableOpacity>
 				)}
 			</ScrollView>
+		</KeyboardAvoidingView>
 		</SafeAreaView>
 	);
 }

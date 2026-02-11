@@ -1,6 +1,7 @@
-import React, { useRef, useMemo } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Alert } from "react-native";
-import { Swipeable } from "react-native-gesture-handler";
+import React, { useRef, useMemo, useCallback } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import ReanimatedSwipeable, { type SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
+import Animated, { SharedValue, useAnimatedStyle } from "react-native-reanimated";
 import { useColors, Colors, spacing } from "../theme";
 import { Cycle } from "../database";
 import { useLanguage } from "../../../../i18n";
@@ -58,10 +59,6 @@ function useStyles(colors: Colors) {
 			alignItems: "center",
 			marginBottom: spacing.sm,
 		},
-		actionButton: {
-			justifyContent: "center",
-			alignItems: "center",
-		},
 		actionButtonInner: {
 			width: 60,
 			height: "100%",
@@ -89,11 +86,42 @@ function useStyles(colors: Colors) {
 	}), [colors]);
 }
 
+function RightActions({
+	translation,
+	styles,
+	onEdit,
+	onDelete,
+}: {
+	translation: SharedValue<number>;
+	styles: ReturnType<typeof useStyles>;
+	onEdit: () => void;
+	onDelete: () => void;
+}) {
+	const animatedStyle = useAnimatedStyle(() => ({
+		transform: [{ translateX: Math.min(0, translation.value + 120) }],
+	}));
+
+	return (
+		<View style={styles.rightActionsContainer}>
+			<Animated.View style={animatedStyle}>
+				<TouchableOpacity style={[styles.actionButtonInner, styles.editButton]} onPress={onEdit}>
+					<Text style={styles.actionIcon}>✏️</Text>
+				</TouchableOpacity>
+			</Animated.View>
+			<Animated.View style={animatedStyle}>
+				<TouchableOpacity style={[styles.actionButtonInner, styles.deleteButton]} onPress={onDelete}>
+					<Text style={styles.actionIcon}>🗑️</Text>
+				</TouchableOpacity>
+			</Animated.View>
+		</View>
+	);
+}
+
 export default function SwipeableCycleCard({ cycle, isCurrent, onEdit, onDelete }: SwipeableCycleCardProps) {
 	const colors = useColors();
 	const styles = useStyles(colors);
 	const { t } = useLanguage();
-	const swipeableRef = useRef<Swipeable>(null);
+	const swipeableRef = useRef<SwipeableMethods>(null);
 
 	const formatDate = (dateString: string) => {
 		const date = new Date(dateString);
@@ -109,7 +137,7 @@ export default function SwipeableCycleCard({ cycle, isCurrent, onEdit, onDelete 
 		return `${start} - ...`;
 	};
 
-	const handleDelete = () => {
+	const handleDelete = useCallback(() => {
 		swipeableRef.current?.close();
 		Alert.alert(t("deleteCycle"), t("deleteConfirm"), [
 			{ text: t("cancel"), style: "cancel" },
@@ -119,41 +147,29 @@ export default function SwipeableCycleCard({ cycle, isCurrent, onEdit, onDelete 
 				onPress: () => onDelete(cycle),
 			},
 		]);
-	};
+	}, [cycle, onDelete, t]);
 
-	const handleEdit = () => {
+	const handleEdit = useCallback(() => {
 		swipeableRef.current?.close();
 		onEdit(cycle);
-	};
+	}, [cycle, onEdit]);
 
-	const renderRightActions = (
-		progress: Animated.AnimatedInterpolation<number>,
-		dragX: Animated.AnimatedInterpolation<number>,
+	const renderRightActions = useCallback((
+		_progress: SharedValue<number>,
+		translation: SharedValue<number>,
 	) => {
-		const translateX = dragX.interpolate({
-			inputRange: [-120, 0],
-			outputRange: [0, 120],
-			extrapolate: "clamp",
-		});
-
 		return (
-			<View style={styles.rightActionsContainer}>
-				<Animated.View style={[styles.actionButton, { transform: [{ translateX }] }]}>
-					<TouchableOpacity style={[styles.actionButtonInner, styles.editButton]} onPress={handleEdit}>
-						<Text style={styles.actionIcon}>✏️</Text>
-					</TouchableOpacity>
-				</Animated.View>
-				<Animated.View style={[styles.actionButton, { transform: [{ translateX }] }]}>
-					<TouchableOpacity style={[styles.actionButtonInner, styles.deleteButton]} onPress={handleDelete}>
-						<Text style={styles.actionIcon}>🗑️</Text>
-					</TouchableOpacity>
-				</Animated.View>
-			</View>
+			<RightActions
+				translation={translation}
+				styles={styles}
+				onEdit={handleEdit}
+				onDelete={handleDelete}
+			/>
 		);
-	};
+	}, [styles, handleEdit, handleDelete]);
 
 	return (
-		<Swipeable
+		<ReanimatedSwipeable
 			ref={swipeableRef}
 			renderRightActions={renderRightActions}
 			rightThreshold={40}
@@ -175,6 +191,6 @@ export default function SwipeableCycleCard({ cycle, isCurrent, onEdit, onDelete 
 					</Text>
 				</View>
 			</View>
-		</Swipeable>
+		</ReanimatedSwipeable>
 	);
 }

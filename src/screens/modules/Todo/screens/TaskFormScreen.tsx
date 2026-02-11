@@ -8,6 +8,7 @@ import {
 	TouchableOpacity,
 	Alert,
 	Platform,
+	KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -213,6 +214,10 @@ export default function TaskFormScreen() {
 
 	return (
 		<SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+			<KeyboardAvoidingView
+				style={{ flex: 1 }}
+				behavior={Platform.OS === "ios" ? "padding" : undefined}
+			>
 			{/* Header */}
 			<View style={styles.header}>
 				<TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7} style={styles.headerBtn}>
@@ -422,6 +427,7 @@ export default function TaskFormScreen() {
 
 				<View style={{ height: 40 }} />
 			</ScrollView>
+			</KeyboardAvoidingView>
 		</SafeAreaView>
 	);
 }

@@ -8,7 +8,7 @@ import { useLanguage } from "../i18n";
 import { useThemeMode } from "../theme";
 
 const { width } = Dimensions.get("window");
-const CIRCLE_SIZE = (width - 80) / 2;
+const CIRCLE_SIZE = (width - 100) / 2;
 
 type Module = {
 	id: string;
@@ -19,12 +19,13 @@ type Module = {
 };
 
 const modules: Module[] = [
-	{ id: "1", name: "CircleFlow", color: "#FF6B8A", icon: "🌸", route: "CircleFlow" },
+	{ id: "1", name: "Todo", color: "#FF8C00", icon: "\u{2705}", route: "Todo" },
 	{ id: "2", name: "Family Tree", color: "#6B8E23", icon: "🌳", route: "FamilyTree" },
 	{ id: "3", name: "Flags", color: "#1A5276", icon: "\u{1F1EC}\u{1F1EA}", route: "Flags" },
 	{ id: "4", name: "LinguaFlip", color: "#008B8B", icon: "\u{1F30E}", route: "LinguaFlip" },
 	{ id: "5", name: "Birthdays", color: "#E91E63", icon: "\u{1F382}", route: "Birthdays" },
-	{ id: "6", name: "Todo", color: "#FF8C00", icon: "\u{2705}", route: "Todo" },
+	{ id: "6", name: "CircleFlow", color: "#FF6B8A", icon: "🌸", route: "CircleFlow" },
+	{ id: "7", name: "Pocket", color: "#2E7D32", icon: "\u{1F4B0}", route: "PocketManager" },
 ];
 
 function getHomeColors(mode: "light" | "dark") {
@@ -80,7 +81,7 @@ export default function HomeScreen({ navigation }: Props) {
 					</TouchableOpacity>
 				</View>
 
-				<Text style={styles.title}>{t("appTitle")}</Text>
+				{/* <Text style={styles.title}>{t("appTitle")}</Text> */}
 
 				<View style={styles.gridContainer}>
 					{modules.map((module) => (

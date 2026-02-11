@@ -6,8 +6,8 @@ const lightColors = {
 	cardBackground: "#FFFFFF",
 	textPrimary: "#1C1C1E",
 	textSecondary: "#8E8E93",
-	accent: "#FF8C00",
-	tabActive: "#FF8C00",
+	accent: "#2E7D32",
+	tabActive: "#2E7D32",
 	tabInactive: "#8E8E93",
 	border: "#C6C6C8",
 	danger: "#FF3B30",
@@ -15,17 +15,12 @@ const lightColors = {
 	chipBackground: "#F0F0F0",
 	inputBackground: "#F2F2F7",
 	overlay: "rgba(0,0,0,0.5)",
-	priorityHigh: "#F44336",
-	priorityMedium: "#FF9800",
-	priorityLow: "#4CAF50",
-	priorityNone: "#8E8E93",
-	completed: "#8E8E93",
-	overdue: "#F44336",
-	today: "#2196F3",
-	checkboxBorder: "#C6C6C8",
-	checkboxFilled: "#FF8C00",
-	swipeDelete: "#FF3B30",
-	swipeComplete: "#34C759",
+	budgetSafe: "#4CAF50",
+	budgetWarning: "#FF9800",
+	budgetDanger: "#F44336",
+	income: "#4CAF50",
+	expense: "#F44336",
+	shadow: "#000000",
 };
 
 const darkColors = {
@@ -33,8 +28,8 @@ const darkColors = {
 	cardBackground: "#2A273F",
 	textPrimary: "#D9E0EE",
 	textSecondary: "#6C6F93",
-	accent: "#FFB86C",
-	tabActive: "#FFB86C",
+	accent: "#81C784",
+	tabActive: "#81C784",
 	tabInactive: "#6C6F93",
 	border: "#3A375C",
 	danger: "#FF5555",
@@ -42,17 +37,12 @@ const darkColors = {
 	chipBackground: "#3A375C",
 	inputBackground: "#1E1E2E",
 	overlay: "rgba(0,0,0,0.7)",
-	priorityHigh: "#FF5555",
-	priorityMedium: "#FFB86C",
-	priorityLow: "#50FA7B",
-	priorityNone: "#6C6F93",
-	completed: "#6C6F93",
-	overdue: "#FF5555",
-	today: "#8BE9FD",
-	checkboxBorder: "#6C6F93",
-	checkboxFilled: "#FFB86C",
-	swipeDelete: "#FF5555",
-	swipeComplete: "#50FA7B",
+	budgetSafe: "#81C784",
+	budgetWarning: "#FFB86C",
+	budgetDanger: "#FF5555",
+	income: "#81C784",
+	expense: "#FF5555",
+	shadow: "#000000",
 };
 
 export type Colors = typeof lightColors;
@@ -89,16 +79,8 @@ export const typography = {
 };
 
 export const CATEGORY_COLORS = [
-	"#FF8C00", "#F44336", "#E91E63", "#9C27B0",
+	"#2E7D32", "#F44336", "#E91E63", "#9C27B0",
 	"#673AB7", "#3F51B5", "#2196F3", "#03A9F4",
 	"#00BCD4", "#009688", "#4CAF50", "#8BC34A",
 	"#CDDC39", "#FFC107", "#FF9800", "#795548",
-];
-
-export const CATEGORY_ICONS = [
-	"\u{1F4C1}", "\u{1F4BC}", "\u{1F3E0}", "\u{2764}\u{FE0F}",
-	"\u{2B50}", "\u{1F4DA}", "\u{1F6D2}", "\u{1F4AA}",
-	"\u{1F3AF}", "\u{1F393}", "\u{2708}\u{FE0F}", "\u{1F3B5}",
-	"\u{1F37D}\u{FE0F}", "\u{1F4B0}", "\u{1F3C3}", "\u{1F527}",
-	"\u{1F48A}", "\u{1F4BB}", "\u{1F381}", "\u{1F4F1}",
 ];
