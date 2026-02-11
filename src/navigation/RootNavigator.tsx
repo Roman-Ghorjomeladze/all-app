@@ -11,6 +11,8 @@ import LinguaFlipNavigator from "../screens/modules/LinguaFlip/LinguaFlipNavigat
 import BirthdaysNavigator from "../screens/modules/Birthdays/BirthdaysNavigator";
 import TodoNavigator from "../screens/modules/Todo/TodoNavigator";
 import PocketManagerNavigator from "../screens/modules/PocketManager/PocketManagerNavigator";
+import MealPlannerNavigator from "../screens/modules/MealPlanner/MealPlannerNavigator";
+import FitLogNavigator from "../screens/modules/FitLog/FitLogNavigator";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -47,6 +49,8 @@ export default function RootNavigator() {
 				<Stack.Screen name="Birthdays" component={BirthdaysNavigator} options={{ headerShown: false }} />
 				<Stack.Screen name="Todo" component={TodoNavigator} options={{ headerShown: false }} />
 				<Stack.Screen name="PocketManager" component={PocketManagerNavigator} options={{ headerShown: false }} />
+				<Stack.Screen name="MealPlanner" component={MealPlannerNavigator} options={{ headerShown: false }} />
+				<Stack.Screen name="FitLog" component={FitLogNavigator} options={{ headerShown: false }} />
 			</Stack.Navigator>
 		</NavigationContainer>
 	);

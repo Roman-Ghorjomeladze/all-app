@@ -231,12 +231,21 @@ export default function EventFormScreen() {
 					<Text style={styles.dateButtonText}>{formattedDate}</Text>
 				</TouchableOpacity>
 				{showDatePicker && (
-					<DateTimePicker
-						value={dateForPicker}
-						mode="date"
-						display={Platform.OS === "ios" ? "spinner" : "default"}
-						onChange={handleDateChange}
-					/>
+					<>
+						{Platform.OS === "ios" && (
+							<View style={styles.pickerContainer}>
+								<TouchableOpacity onPress={() => setShowDatePicker(false)} activeOpacity={0.7}>
+									<Text style={styles.pickerDone}>{t("done")}</Text>
+								</TouchableOpacity>
+							</View>
+						)}
+						<DateTimePicker
+							value={dateForPicker}
+							mode="date"
+							display={Platform.OS === "ios" ? "spinner" : "default"}
+							onChange={handleDateChange}
+						/>
+					</>
 				)}
 
 				{/* Year */}
@@ -260,13 +269,22 @@ export default function EventFormScreen() {
 							<Text style={styles.dateButtonText}>{eventYear}</Text>
 						</TouchableOpacity>
 						{showYearPicker && (
-							<DateTimePicker
-								value={yearForPicker}
-								mode="date"
-								display={Platform.OS === "ios" ? "spinner" : "default"}
-								onChange={handleYearChange}
-								maximumDate={new Date()}
-							/>
+							<>
+								{Platform.OS === "ios" && (
+									<View style={styles.pickerContainer}>
+										<TouchableOpacity onPress={() => setShowYearPicker(false)} activeOpacity={0.7}>
+											<Text style={styles.pickerDone}>{t("done")}</Text>
+										</TouchableOpacity>
+									</View>
+								)}
+								<DateTimePicker
+									value={yearForPicker}
+									mode="date"
+									display={Platform.OS === "ios" ? "spinner" : "default"}
+									onChange={handleYearChange}
+									maximumDate={new Date()}
+								/>
+							</>
 						)}
 					</>
 				)}
@@ -351,7 +369,7 @@ function useStyles(colors: Colors) {
 				},
 				content: {
 					padding: spacing.lg,
-					paddingBottom: spacing.xl * 2,
+					paddingBottom: spacing.xl * 6,
 				},
 				label: {
 					...typography.subhead,
@@ -426,6 +444,15 @@ function useStyles(colors: Colors) {
 					...typography.headline,
 					color: colors.danger,
 					marginLeft: spacing.sm,
+				},
+				pickerContainer: {
+					alignItems: "flex-end",
+					paddingTop: spacing.xs,
+					paddingBottom: spacing.xs,
+				},
+				pickerDone: {
+					...typography.headline,
+					color: colors.accent,
 				},
 			}),
 		[colors]

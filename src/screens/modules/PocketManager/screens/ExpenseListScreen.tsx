@@ -93,33 +93,37 @@ export default function ExpenseListScreen() {
 				colors={colors}
 			/>
 
-			{/* Monthly Total */}
-			<View style={styles.totalRow}>
-				<Text style={styles.totalLabel}>{t("pmMonthlySpending")}</Text>
-				<Text style={styles.totalAmount}>{"\u{20BE}"}{total.toFixed(2)}</Text>
-			</View>
-
-			{/* Expense List */}
-			{expenses.length === 0 ? (
-				<View style={styles.emptyContainer}>
-					<Text style={styles.emptyEmoji}>{"\u{1F4B3}"}</Text>
-					<Text style={styles.emptyText}>{t("pmNoExpenses")}</Text>
+			{/* Content area - flex:1 keeps chips pinned at top */}
+			<View style={styles.contentArea}>
+				{/* Monthly Total */}
+				<View style={styles.totalRow}>
+					<Text style={styles.totalLabel}>{t("pmMonthlySpending")}</Text>
+					<Text style={styles.totalAmount}>{"\u{20BE}"}{total.toFixed(2)}</Text>
 				</View>
-			) : (
-				<FlatList
-					data={expenses}
-					keyExtractor={(item) => item.id.toString()}
-					renderItem={({ item }) => (
-						<ExpenseListItem
-							expense={item}
-							onPress={handlePress}
-							onDelete={handleDelete}
-							colors={colors}
-						/>
-					)}
-					contentContainerStyle={styles.listContent}
-				/>
-			)}
+
+				{/* Expense List */}
+				{expenses.length === 0 ? (
+					<View style={styles.emptyContainer}>
+						<Text style={styles.emptyEmoji}>{"\u{1F4B3}"}</Text>
+						<Text style={styles.emptyText}>{t("pmNoExpenses")}</Text>
+					</View>
+				) : (
+					<FlatList
+						style={{ flex: 1 }}
+						data={expenses}
+						keyExtractor={(item) => item.id.toString()}
+						renderItem={({ item }) => (
+							<ExpenseListItem
+								expense={item}
+								onPress={handlePress}
+								onDelete={handleDelete}
+								colors={colors}
+							/>
+						)}
+						contentContainerStyle={styles.listContent}
+					/>
+				)}
+			</View>
 		</SafeAreaView>
 	);
 }
@@ -137,7 +141,8 @@ function useStyles(colors: Colors) {
 					justifyContent: "space-between",
 					alignItems: "center",
 					paddingHorizontal: spacing.lg,
-					paddingVertical: spacing.md,
+					paddingTop: spacing.md,
+					paddingBottom: spacing.xs,
 				},
 				title: {
 					...typography.largeTitle,
@@ -145,12 +150,15 @@ function useStyles(colors: Colors) {
 					flex: 1,
 					marginRight: spacing.sm,
 				},
-				totalRow: {
+				contentArea: {
+				flex: 1,
+			},
+			totalRow: {
 					flexDirection: "row",
 					justifyContent: "space-between",
 					alignItems: "center",
 					paddingHorizontal: spacing.lg,
-					paddingVertical: spacing.sm,
+					paddingVertical: spacing.xs,
 				},
 				totalLabel: {
 					...typography.subhead,
@@ -166,9 +174,9 @@ function useStyles(colors: Colors) {
 				},
 				emptyContainer: {
 					flex: 1,
-					justifyContent: "center",
 					alignItems: "center",
 					paddingHorizontal: spacing.xl,
+					paddingTop: spacing.xl * 3,
 				},
 				emptyEmoji: {
 					fontSize: 64,

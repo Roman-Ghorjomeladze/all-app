@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-nati
 import { useFocusEffect, useRoute, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { LLQuizStackParamList } from "../../../../types/navigation";
-import { useColors, Colors, spacing } from "../theme";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useColors, Colors, spacing, typography } from "../theme";
 import { useLanguage } from "../i18n";
 import { getCardsByProject, getCardsByTag, getTagsByProject, Tag } from "../database";
 import TagFilter from "../components/TagFilter";
@@ -26,9 +27,26 @@ const MODES: ModeOption[] = [
 
 function useStyles(colors: Colors) {
 	return useMemo(() => StyleSheet.create({
+		safeArea: {
+			flex: 1,
+			backgroundColor: colors.background,
+		},
 		container: {
 			flex: 1,
 			backgroundColor: colors.background,
+		},
+		header: {
+			flexDirection: "row",
+			justifyContent: "space-between",
+			alignItems: "center",
+			paddingHorizontal: spacing.lg,
+			paddingVertical: spacing.md,
+		},
+		headerTitle: {
+			...typography.largeTitle,
+			color: colors.textPrimary,
+			flex: 1,
+			marginRight: spacing.sm,
 		},
 		scrollContent: {
 			paddingHorizontal: spacing.lg,
@@ -203,7 +221,12 @@ export default function QuizStartScreen() {
 	const needsMoreCards = (selectedMode === "easy" || selectedMode === "medium") && maxCount < 4;
 
 	return (
-		<View style={styles.container}>
+		<SafeAreaView style={styles.safeArea} edges={["top"]}>
+			{/* Header */}
+			<View style={styles.header}>
+				<Text style={styles.headerTitle} numberOfLines={1}>{t("llQuiz")}</Text>
+			</View>
+
 			<ScrollView contentContainerStyle={styles.scrollContent}>
 				{/* Tag filter */}
 				<TagFilter tags={tags} selectedTagId={selectedTagId} onSelect={setSelectedTagId} />
@@ -280,6 +303,6 @@ export default function QuizStartScreen() {
 					<Text style={styles.startButtonText}>{t("llStartQuiz")}</Text>
 				</TouchableOpacity>
 			</View>
-		</View>
+		</SafeAreaView>
 	);
 }

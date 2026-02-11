@@ -299,13 +299,22 @@ export default function TaskFormScreen() {
 						</TouchableOpacity>
 					)}
 				</View>
-				{(showDatePicker || Platform.OS === "android") && showDatePicker && (
-					<DateTimePicker
-						value={dueDate ? new Date(dueDate + "T00:00:00") : new Date()}
-						mode="date"
-						display={Platform.OS === "ios" ? "spinner" : "default"}
-						onChange={handleDateChange}
-					/>
+				{showDatePicker && (
+					<>
+						{Platform.OS === "ios" && (
+							<View style={styles.pickerContainer}>
+								<TouchableOpacity onPress={() => setShowDatePicker(false)} activeOpacity={0.7}>
+									<Text style={styles.pickerDone}>{t("done")}</Text>
+								</TouchableOpacity>
+							</View>
+						)}
+						<DateTimePicker
+							value={dueDate ? new Date(dueDate + "T00:00:00") : new Date()}
+							mode="date"
+							display={Platform.OS === "ios" ? "spinner" : "default"}
+							onChange={handleDateChange}
+						/>
+					</>
 				)}
 
 				{/* Due Time (only if date set) */}
@@ -330,12 +339,21 @@ export default function TaskFormScreen() {
 							)}
 						</View>
 						{showTimePicker && (
-							<DateTimePicker
-								value={dueTime ? new Date(`2000-01-01T${dueTime}:00`) : new Date()}
-								mode="time"
-								display={Platform.OS === "ios" ? "spinner" : "default"}
-								onChange={handleTimeChange}
-							/>
+							<>
+								{Platform.OS === "ios" && (
+									<View style={styles.pickerContainer}>
+										<TouchableOpacity onPress={() => setShowTimePicker(false)} activeOpacity={0.7}>
+											<Text style={styles.pickerDone}>{t("done")}</Text>
+										</TouchableOpacity>
+									</View>
+								)}
+								<DateTimePicker
+									value={dueTime ? new Date(`2000-01-01T${dueTime}:00`) : new Date()}
+									mode="time"
+									display={Platform.OS === "ios" ? "spinner" : "default"}
+									onChange={handleTimeChange}
+								/>
+							</>
 						)}
 					</>
 				)}
@@ -457,6 +475,7 @@ function useStyles(colors: Colors) {
 				},
 				form: {
 					padding: spacing.lg,
+					paddingBottom: spacing.xl * 6,
 				},
 				sectionLabel: {
 					...typography.footnote,
@@ -581,6 +600,15 @@ function useStyles(colors: Colors) {
 				deleteText: {
 					...typography.headline,
 					color: colors.danger,
+				},
+				pickerContainer: {
+					alignItems: "flex-end",
+					paddingTop: spacing.xs,
+					paddingBottom: spacing.xs,
+				},
+				pickerDone: {
+					...typography.headline,
+					color: colors.accent,
 				},
 			}),
 		[colors]

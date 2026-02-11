@@ -22,6 +22,7 @@ import {
 	updateExpense,
 	deleteExpense,
 	getExpense,
+	getExpenseCategoryIds,
 	getGlobalCategories,
 	getActiveProjects,
 	getProjectCategories,
@@ -54,8 +55,8 @@ export default function ExpenseFormScreen() {
 	const [showDatePicker, setShowDatePicker] = useState(false);
 	const [notes, setNotes] = useState("");
 	const [selectedProjectId, setSelectedProjectId] = useState<number | null>(preselectedProjectId);
-	const [selectedGlobalCategoryId, setSelectedGlobalCategoryId] = useState<number | null>(null);
-	const [selectedProjectCategoryId, setSelectedProjectCategoryId] = useState<number | null>(null);
+	const [selectedGlobalCategoryIds, setSelectedGlobalCategoryIds] = useState<number[]>([]);
+	const [selectedProjectCategoryIds, setSelectedProjectCategoryIds] = useState<number[]>([]);
 
 	const [globalCategories, setGlobalCategories] = useState<GlobalCategory[]>([]);
 	const [projectCategories, setProjectCategories] = useState<ProjectCategory[]>([]);
@@ -78,8 +79,9 @@ export default function ExpenseFormScreen() {
 					setDate(new Date(expense.date + "T00:00:00"));
 					setNotes(expense.notes || "");
 					setSelectedProjectId(expense.project_id);
-					setSelectedGlobalCategoryId(expense.global_category_id);
-					setSelectedProjectCategoryId(expense.project_category_id);
+					const catIds = await getExpenseCategoryIds(expenseId);
+					setSelectedGlobalCategoryIds(catIds.globalIds);
+					setSelectedProjectCategoryIds(catIds.projectIds);
 					if (expense.project_id) {
 						const pc = await getProjectCategories(expense.project_id);
 						setProjectCategories(pc);
@@ -96,8 +98,8 @@ export default function ExpenseFormScreen() {
 	// When project changes, load its categories
 	const handleProjectSelect = useCallback(async (projectId: number | null) => {
 		setSelectedProjectId(projectId);
-		setSelectedProjectCategoryId(null);
-		setSelectedGlobalCategoryId(null);
+		setSelectedProjectCategoryIds([]);
+		setSelectedGlobalCategoryIds([]);
 		if (projectId) {
 			const pc = await getProjectCategories(projectId);
 			setProjectCategories(pc);
@@ -106,13 +108,15 @@ export default function ExpenseFormScreen() {
 		}
 	}, []);
 
-	const handleCategorySelect = useCallback((id: number) => {
+	const handleCategoryToggle = useCallback((id: number) => {
 		if (selectedProjectId) {
-			setSelectedProjectCategoryId(id);
-			setSelectedGlobalCategoryId(null);
+			setSelectedProjectCategoryIds((prev) =>
+				prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+			);
 		} else {
-			setSelectedGlobalCategoryId(id);
-			setSelectedProjectCategoryId(null);
+			setSelectedGlobalCategoryIds((prev) =>
+				prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+			);
 		}
 	}, [selectedProjectId]);
 
@@ -141,8 +145,8 @@ export default function ExpenseFormScreen() {
 			date: toISODate(date),
 			notes: notes.trim() || null,
 			project_id: selectedProjectId,
-			global_category_id: selectedProjectId ? null : selectedGlobalCategoryId,
-			project_category_id: selectedProjectId ? selectedProjectCategoryId : null,
+			global_category_ids: selectedProjectId ? [] : selectedGlobalCategoryIds,
+			project_category_ids: selectedProjectId ? selectedProjectCategoryIds : [],
 		};
 
 		if (isEdit && expenseId) {
@@ -151,7 +155,7 @@ export default function ExpenseFormScreen() {
 			await createExpense(data);
 		}
 		navigation.goBack();
-	}, [amount, date, notes, selectedProjectId, selectedGlobalCategoryId, selectedProjectCategoryId, isEdit, expenseId, navigation, t]);
+	}, [amount, date, notes, selectedProjectId, selectedGlobalCategoryIds, selectedProjectCategoryIds, isEdit, expenseId, navigation, t]);
 
 	const handleDelete = useCallback(async () => {
 		if (!expenseId) return;
@@ -169,7 +173,7 @@ export default function ExpenseFormScreen() {
 	}, [expenseId, navigation, t]);
 
 	const currentCategories = selectedProjectId ? projectCategories : globalCategories;
-	const currentCategoryId = selectedProjectId ? selectedProjectCategoryId : selectedGlobalCategoryId;
+	const currentCategoryIds = selectedProjectId ? selectedProjectCategoryIds : selectedGlobalCategoryIds;
 
 	return (
 		<SafeAreaView style={styles.safeArea}>
@@ -206,12 +210,21 @@ export default function ExpenseFormScreen() {
 					<Text style={styles.dateButtonText}>{formatDate(date)}</Text>
 				</TouchableOpacity>
 				{showDatePicker && (
-					<DateTimePicker
-						value={date}
-						mode="date"
-						display={Platform.OS === "ios" ? "spinner" : "default"}
-						onChange={handleDateChange}
-					/>
+					<>
+						{Platform.OS === "ios" && (
+							<View style={styles.pickerContainer}>
+								<TouchableOpacity onPress={() => setShowDatePicker(false)} activeOpacity={0.7}>
+									<Text style={styles.pickerDone}>{t("done")}</Text>
+								</TouchableOpacity>
+							</View>
+						)}
+						<DateTimePicker
+							value={date}
+							mode="date"
+							display={Platform.OS === "ios" ? "spinner" : "default"}
+							onChange={handleDateChange}
+						/>
+					</>
 				)}
 
 				{/* Project */}
@@ -232,8 +245,8 @@ export default function ExpenseFormScreen() {
 				{currentCategories.length > 0 ? (
 					<CategoryPicker
 						categories={currentCategories}
-						selectedId={currentCategoryId}
-						onSelect={handleCategorySelect}
+						selectedIds={currentCategoryIds}
+						onToggle={handleCategoryToggle}
 						colors={colors}
 					/>
 				) : (
@@ -292,7 +305,7 @@ function useStyles(colors: Colors) {
 				},
 				content: {
 					padding: spacing.lg,
-					paddingBottom: spacing.xl * 2,
+					paddingBottom: spacing.xl * 6,
 				},
 				label: {
 					...typography.subhead,
@@ -348,6 +361,15 @@ function useStyles(colors: Colors) {
 					...typography.headline,
 					color: colors.danger,
 					marginLeft: spacing.sm,
+				},
+				pickerContainer: {
+					alignItems: "flex-end",
+					paddingTop: spacing.xs,
+					paddingBottom: spacing.xs,
+				},
+				pickerDone: {
+					...typography.headline,
+					color: colors.accent,
 				},
 			}),
 		[colors]

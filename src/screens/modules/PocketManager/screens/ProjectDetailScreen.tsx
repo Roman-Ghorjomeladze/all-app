@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { View, Text, FlatList, ScrollView, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from "@react-navigation/native";
@@ -36,6 +36,7 @@ export default function ProjectDetailScreen() {
 	const [project, setProject] = useState<ProjectWithStats | null>(null);
 	const [categories, setCategories] = useState<ProjectCategoryWithTotal[]>([]);
 	const [expenses, setExpenses] = useState<ExpenseWithDetails[]>([]);
+	const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
 
 	const loadData = useCallback(async () => {
 		await initDatabase();
@@ -102,6 +103,20 @@ export default function ProjectDetailScreen() {
 		loadData();
 	}, [project, projectId, navigation, t, loadData]);
 
+	const filteredExpenses = useMemo(() => {
+		if (selectedCategoryId === null) return expenses;
+		return expenses.filter((e) => {
+			const ids = e.linked_project_category_ids?.split(",") || [];
+			return ids.includes(String(selectedCategoryId));
+		});
+	}, [expenses, selectedCategoryId]);
+
+	const selectedCategoryTotal = useMemo(() => {
+		if (selectedCategoryId === null) return null;
+		const cat = categories.find((c) => c.id === selectedCategoryId);
+		return cat ? cat.total_amount : 0;
+	}, [selectedCategoryId, categories]);
+
 	if (!project) return null;
 
 	const renderHeader = () => (
@@ -120,25 +135,44 @@ export default function ProjectDetailScreen() {
 				<Text style={styles.totalAmount}>{"\u{20BE}"}{project.total_spent.toFixed(2)}</Text>
 			</View>
 
-			{/* Category Breakdown */}
+			{/* Category Filter Chips */}
 			{categories.length > 0 && (
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>{t("pmCategoryBreakdown")}</Text>
+				<ScrollView
+					horizontal
+					showsHorizontalScrollIndicator={false}
+					contentContainerStyle={styles.filterChipsContainer}
+					style={styles.filterChipsScroll}
+				>
+					<TouchableOpacity
+						style={[styles.filterChip, selectedCategoryId === null && styles.filterChipActive]}
+						onPress={() => setSelectedCategoryId(null)}
+						activeOpacity={0.7}
+					>
+						<Text style={[styles.filterChipText, selectedCategoryId === null && styles.filterChipTextActive]}>
+							{t("pmAll")}
+						</Text>
+					</TouchableOpacity>
 					{categories.map((cat) => (
-						<View key={cat.id} style={styles.catRow}>
-							<View style={styles.catLeft}>
-								<Text style={styles.catIcon}>{cat.icon}</Text>
-								<Text style={styles.catName} numberOfLines={1}>{cat.name}</Text>
-							</View>
-							<Text style={styles.catAmount}>{cat.total_amount.toFixed(2)}</Text>
-						</View>
+						<TouchableOpacity
+							key={cat.id}
+							style={[styles.filterChip, selectedCategoryId === cat.id && styles.filterChipActive]}
+							onPress={() => setSelectedCategoryId(selectedCategoryId === cat.id ? null : cat.id)}
+							activeOpacity={0.7}
+						>
+							<Text style={styles.filterChipIcon}>{cat.icon}</Text>
+						</TouchableOpacity>
 					))}
-				</View>
+				</ScrollView>
 			)}
 
 			{/* Expenses header */}
 			<View style={styles.expenseHeader}>
-				<Text style={styles.sectionTitle}>{t("pmExpenses")}</Text>
+				<Text style={styles.sectionTitle}>
+					{t("pmExpenses")}
+					{selectedCategoryTotal !== null && (
+						<Text style={styles.filterTotal}>{" · "}{"\u{20BE}"}{selectedCategoryTotal.toFixed(2)}</Text>
+					)}
+				</Text>
 				<TouchableOpacity onPress={handleAddExpense} activeOpacity={0.7}>
 					<Ionicons name="add-circle" size={28} color={colors.accent} />
 				</TouchableOpacity>
@@ -178,7 +212,7 @@ export default function ProjectDetailScreen() {
 			</View>
 
 			<FlatList
-				data={expenses}
+				data={filteredExpenses}
 				keyExtractor={(item) => item.id.toString()}
 				renderItem={({ item }) => (
 					<ExpenseListItem
@@ -250,31 +284,43 @@ function useStyles(colors: Colors) {
 					...typography.title2,
 					color: colors.accent,
 				},
-				catRow: {
-					flexDirection: "row",
-					justifyContent: "space-between",
+				filterChipsScroll: {
+					marginTop: spacing.md,
+				},
+				filterChipsContainer: {
+					paddingHorizontal: spacing.lg,
+					gap: spacing.sm,
+				},
+				filterChip: {
+					height: 36,
+					minWidth: 36,
+					borderRadius: 18,
+					justifyContent: "center",
 					alignItems: "center",
-					paddingVertical: spacing.sm,
-					borderBottomWidth: 0.5,
-					borderBottomColor: colors.border,
+					paddingHorizontal: spacing.sm,
+					backgroundColor: colors.cardBackground,
+					borderWidth: 1,
+					borderColor: colors.border,
 				},
-				catLeft: {
-					flexDirection: "row",
-					alignItems: "center",
-					flex: 1,
+				filterChipActive: {
+					backgroundColor: colors.accent,
+					borderColor: colors.accent,
 				},
-				catIcon: {
-					fontSize: 20,
-					marginRight: spacing.sm,
+				filterChipText: {
+					...typography.subhead,
+					color: colors.textSecondary,
+					fontWeight: "600",
 				},
-				catName: {
-					...typography.body,
-					color: colors.textPrimary,
-					flex: 1,
+				filterChipTextActive: {
+					color: colors.white,
 				},
-				catAmount: {
-					...typography.headline,
-					color: colors.textPrimary,
+				filterChipIcon: {
+					fontSize: 18,
+				},
+				filterTotal: {
+					...typography.subhead,
+					color: colors.accent,
+					fontWeight: "400",
 				},
 				expenseHeader: {
 					flexDirection: "row",

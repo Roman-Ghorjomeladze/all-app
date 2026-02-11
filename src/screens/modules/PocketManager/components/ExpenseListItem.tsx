@@ -19,13 +19,28 @@ export default function ExpenseListItem({ expense, onPress, onDelete, colors }: 
 		return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 	}, [expense.date]);
 
+	const icons = expense.category_icons ? expense.category_icons.split("|||") : [];
+	const names = expense.category_names ? expense.category_names.split("|||") : [];
+	const colorsList = expense.category_colors ? expense.category_colors.split("|||") : [];
+	const firstIcon = icons[0] || null;
+	const firstColor = colorsList[0] || colors.accent;
+	const firstName = names[0] || null;
+	const extraCount = icons.length > 1 ? icons.length - 1 : 0;
+
 	return (
 		<TouchableOpacity style={styles.card} onPress={() => onPress(expense)} activeOpacity={0.7}>
 			<View style={styles.row}>
 				<View style={styles.left}>
-					{expense.category_icon && (
-						<View style={[styles.categoryDot, { backgroundColor: expense.category_color || colors.accent }]}>
-							<Text style={styles.categoryIcon}>{expense.category_icon}</Text>
+					{firstIcon && (
+						<View style={styles.iconContainer}>
+							<View style={[styles.categoryDot, { backgroundColor: firstColor }]}>
+								<Text style={styles.categoryIcon}>{firstIcon}</Text>
+							</View>
+							{extraCount > 0 && (
+								<View style={[styles.extraBadge, { backgroundColor: colors.accent }]}>
+									<Text style={styles.extraBadgeText}>+{extraCount}</Text>
+								</View>
+							)}
 						</View>
 					)}
 					<View style={styles.info}>
@@ -38,8 +53,10 @@ export default function ExpenseListItem({ expense, onPress, onDelete, colors }: 
 							)}
 						</View>
 						<View style={styles.bottomRow}>
-							{expense.category_name && (
-								<Text style={styles.categoryName}>{expense.category_name}</Text>
+							{firstName && (
+								<Text style={styles.categoryName} numberOfLines={1}>
+									{names.length > 1 ? `${firstName} +${extraCount}` : firstName}
+								</Text>
 							)}
 							<Text style={styles.date}>{formattedDate}</Text>
 						</View>
@@ -86,16 +103,34 @@ function useStyles(colors: Colors) {
 					alignItems: "center",
 					flex: 1,
 				},
+				iconContainer: {
+					marginRight: spacing.sm,
+				},
 				categoryDot: {
 					width: 36,
 					height: 36,
 					borderRadius: 18,
 					justifyContent: "center",
 					alignItems: "center",
-					marginRight: spacing.sm,
 				},
 				categoryIcon: {
 					fontSize: 16,
+				},
+				extraBadge: {
+					position: "absolute",
+					top: -4,
+					right: -8,
+					minWidth: 18,
+					height: 18,
+					borderRadius: 9,
+					justifyContent: "center",
+					alignItems: "center",
+					paddingHorizontal: 4,
+				},
+				extraBadgeText: {
+					fontSize: 10,
+					fontWeight: "700",
+					color: colors.white,
 				},
 				info: {
 					flex: 1,
@@ -129,6 +164,7 @@ function useStyles(colors: Colors) {
 				categoryName: {
 					...typography.footnote,
 					color: colors.textSecondary,
+					flexShrink: 1,
 				},
 				date: {
 					...typography.footnote,

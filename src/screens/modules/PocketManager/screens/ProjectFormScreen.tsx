@@ -114,6 +114,12 @@ export default function ProjectFormScreen() {
 		setCategories(updated);
 	};
 
+	const handleCategoryIconChange = (index: number, newIcon: string) => {
+		const updated = [...categories];
+		updated[index] = { ...updated[index], icon: newIcon };
+		setCategories(updated);
+	};
+
 	const handleCategoryDelete = (index: number) => {
 		const updated = [...categories];
 		if (updated[index].id) {
@@ -266,12 +272,21 @@ export default function ProjectFormScreen() {
 					)}
 				</TouchableOpacity>
 				{showStartPicker && (
-					<DateTimePicker
-						value={startDate || new Date()}
-						mode="date"
-						display={Platform.OS === "ios" ? "spinner" : "default"}
-						onChange={handleStartDateChange}
-					/>
+					<>
+						{Platform.OS === "ios" && (
+							<View style={styles.pickerContainer}>
+								<TouchableOpacity onPress={() => setShowStartPicker(false)} activeOpacity={0.7}>
+									<Text style={styles.pickerDone}>{t("done")}</Text>
+								</TouchableOpacity>
+							</View>
+						)}
+						<DateTimePicker
+							value={startDate || new Date()}
+							mode="date"
+							display={Platform.OS === "ios" ? "spinner" : "default"}
+							onChange={handleStartDateChange}
+						/>
+					</>
 				)}
 
 				{/* End Date */}
@@ -293,12 +308,21 @@ export default function ProjectFormScreen() {
 					)}
 				</TouchableOpacity>
 				{showEndPicker && (
-					<DateTimePicker
-						value={endDate || new Date()}
-						mode="date"
-						display={Platform.OS === "ios" ? "spinner" : "default"}
-						onChange={handleEndDateChange}
-					/>
+					<>
+						{Platform.OS === "ios" && (
+							<View style={styles.pickerContainer}>
+								<TouchableOpacity onPress={() => setShowEndPicker(false)} activeOpacity={0.7}>
+									<Text style={styles.pickerDone}>{t("done")}</Text>
+								</TouchableOpacity>
+							</View>
+						)}
+						<DateTimePicker
+							value={endDate || new Date()}
+							mode="date"
+							display={Platform.OS === "ios" ? "spinner" : "default"}
+							onChange={handleEndDateChange}
+						/>
+					</>
 				)}
 
 				{/* Categories */}
@@ -312,6 +336,7 @@ export default function ProjectFormScreen() {
 							name={cat.name}
 							color={cat.color}
 							onChangeName={(n) => handleCategoryNameChange(realIndex, n)}
+							onChangeIcon={(ic) => handleCategoryIconChange(realIndex, ic)}
 							onDelete={() => handleCategoryDelete(realIndex)}
 							colors={colors}
 							placeholder={t("pmCategoryNamePlaceholder")}
@@ -369,7 +394,7 @@ function useStyles(colors: Colors) {
 				},
 				content: {
 					padding: spacing.lg,
-					paddingBottom: spacing.xl * 2,
+					paddingBottom: spacing.xl * 6,
 				},
 				label: {
 					...typography.subhead,
@@ -445,6 +470,15 @@ function useStyles(colors: Colors) {
 					...typography.headline,
 					color: colors.danger,
 					marginLeft: spacing.sm,
+				},
+				pickerContainer: {
+					alignItems: "flex-end",
+					paddingTop: spacing.xs,
+					paddingBottom: spacing.xs,
+				},
+				pickerDone: {
+					...typography.headline,
+					color: colors.accent,
 				},
 			}),
 		[colors]

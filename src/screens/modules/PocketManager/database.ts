@@ -57,10 +57,11 @@ export type Expense = {
 };
 
 export type ExpenseWithDetails = Expense & {
-	category_name: string | null;
-	category_icon: string | null;
-	category_color: string | null;
+	category_names: string | null;
+	category_icons: string | null;
+	category_colors: string | null;
 	project_name: string | null;
+	linked_project_category_ids: string | null;
 };
 
 export type CreateExpenseData = {
@@ -68,8 +69,8 @@ export type CreateExpenseData = {
 	date: string;
 	notes?: string | null;
 	project_id?: number | null;
-	global_category_id?: number | null;
-	project_category_id?: number | null;
+	global_category_ids?: number[];
+	project_category_ids?: number[];
 };
 
 export type UpdateExpenseData = CreateExpenseData;
@@ -161,6 +162,32 @@ export async function initDatabase(): Promise<void> {
 	await database.execAsync(`CREATE INDEX IF NOT EXISTS idx_pm_expenses_project_cat ON pm_expenses(project_category_id);`);
 	await database.execAsync(`CREATE INDEX IF NOT EXISTS idx_pm_project_categories_project ON pm_project_categories(project_id);`);
 
+	// Junction table for multi-category support
+	await database.execAsync(`
+		CREATE TABLE IF NOT EXISTS pm_expense_categories (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			expense_id INTEGER NOT NULL REFERENCES pm_expenses(id) ON DELETE CASCADE,
+			global_category_id INTEGER REFERENCES pm_global_categories(id) ON DELETE CASCADE,
+			project_category_id INTEGER REFERENCES pm_project_categories(id) ON DELETE CASCADE
+		);
+	`);
+	await database.execAsync(`CREATE INDEX IF NOT EXISTS idx_pm_expense_cats_expense ON pm_expense_categories(expense_id);`);
+
+	// Migrate existing single-category data to junction table
+	const migrated = await database.getFirstAsync<{ cnt: number }>(
+		"SELECT COUNT(*) as cnt FROM pm_expense_categories"
+	);
+	const hasOldData = await database.getFirstAsync<{ cnt: number }>(
+		"SELECT COUNT(*) as cnt FROM pm_expenses WHERE global_category_id IS NOT NULL OR project_category_id IS NOT NULL"
+	);
+	if (migrated && migrated.cnt === 0 && hasOldData && hasOldData.cnt > 0) {
+		await database.execAsync(`
+			INSERT INTO pm_expense_categories (expense_id, global_category_id, project_category_id)
+			SELECT id, global_category_id, project_category_id FROM pm_expenses
+			WHERE global_category_id IS NOT NULL OR project_category_id IS NOT NULL
+		`);
+	}
+
 	// Seed default global categories if empty
 	const count = await database.getFirstAsync<{ cnt: number }>(
 		"SELECT COUNT(*) as cnt FROM pm_global_categories"
@@ -191,9 +218,10 @@ export async function getGlobalCategoriesWithTotals(year: number, month: number)
 	return database.getAllAsync<GlobalCategoryWithTotal>(`
 		SELECT gc.*,
 			COALESCE(SUM(e.amount), 0) as total_amount,
-			COALESCE(COUNT(e.id), 0) as expense_count
+			COALESCE(COUNT(DISTINCT e.id), 0) as expense_count
 		FROM pm_global_categories gc
-		LEFT JOIN pm_expenses e ON e.global_category_id = gc.id
+		LEFT JOIN pm_expense_categories ec ON ec.global_category_id = gc.id
+		LEFT JOIN pm_expenses e ON e.id = ec.expense_id
 			AND substr(e.date, 1, 7) = '${monthStr}'
 		GROUP BY gc.id
 		ORDER BY total_amount DESC, gc.sort_order ASC
@@ -313,9 +341,10 @@ export async function getProjectCategoriesWithTotals(projectId: number): Promise
 	return database.getAllAsync<ProjectCategoryWithTotal>(`
 		SELECT pc.*,
 			COALESCE(SUM(e.amount), 0) as total_amount,
-			COALESCE(COUNT(e.id), 0) as expense_count
+			COALESCE(COUNT(DISTINCT e.id), 0) as expense_count
 		FROM pm_project_categories pc
-		LEFT JOIN pm_expenses e ON e.project_category_id = pc.id
+		LEFT JOIN pm_expense_categories ec ON ec.project_category_id = pc.id
+		LEFT JOIN pm_expenses e ON e.id = ec.expense_id
 		WHERE pc.project_id = ?
 		GROUP BY pc.id
 		ORDER BY total_amount DESC, pc.sort_order ASC
@@ -352,43 +381,84 @@ export async function deleteProjectCategory(id: number): Promise<void> {
 
 const EXPENSE_WITH_DETAILS_QUERY = `
 	SELECT e.*,
-		COALESCE(gc.name, pc.name) as category_name,
-		COALESCE(gc.icon, pc.icon) as category_icon,
-		COALESCE(gc.color, pc.color) as category_color,
+		(SELECT GROUP_CONCAT(COALESCE(gc2.name, pc2.name), '|||') FROM pm_expense_categories ec2
+		 LEFT JOIN pm_global_categories gc2 ON ec2.global_category_id = gc2.id
+		 LEFT JOIN pm_project_categories pc2 ON ec2.project_category_id = pc2.id
+		 WHERE ec2.expense_id = e.id) as category_names,
+		(SELECT GROUP_CONCAT(COALESCE(gc2.icon, pc2.icon), '|||') FROM pm_expense_categories ec2
+		 LEFT JOIN pm_global_categories gc2 ON ec2.global_category_id = gc2.id
+		 LEFT JOIN pm_project_categories pc2 ON ec2.project_category_id = pc2.id
+		 WHERE ec2.expense_id = e.id) as category_icons,
+		(SELECT GROUP_CONCAT(COALESCE(gc2.color, pc2.color), '|||') FROM pm_expense_categories ec2
+		 LEFT JOIN pm_global_categories gc2 ON ec2.global_category_id = gc2.id
+		 LEFT JOIN pm_project_categories pc2 ON ec2.project_category_id = pc2.id
+		 WHERE ec2.expense_id = e.id) as category_colors,
+		(SELECT GROUP_CONCAT(ec2.project_category_id) FROM pm_expense_categories ec2
+		 WHERE ec2.expense_id = e.id AND ec2.project_category_id IS NOT NULL) as linked_project_category_ids,
 		p.name as project_name
 	FROM pm_expenses e
-	LEFT JOIN pm_global_categories gc ON e.global_category_id = gc.id
-	LEFT JOIN pm_project_categories pc ON e.project_category_id = pc.id
 	LEFT JOIN pm_projects p ON e.project_id = p.id
 `;
 
 export async function createExpense(data: CreateExpenseData): Promise<number> {
 	const database = await getDatabase();
 	const result = await database.runAsync(
-		`INSERT INTO pm_expenses (amount, date, notes, project_id, global_category_id, project_category_id)
-		 VALUES (?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO pm_expenses (amount, date, notes, project_id)
+		 VALUES (?, ?, ?, ?)`,
 		data.amount,
 		data.date,
 		data.notes ?? null,
-		data.project_id ?? null,
-		data.global_category_id ?? null,
-		data.project_category_id ?? null
+		data.project_id ?? null
 	);
-	return result.lastInsertRowId;
+	const expenseId = result.lastInsertRowId;
+	// Insert category links
+	if (data.global_category_ids && data.global_category_ids.length > 0) {
+		for (const catId of data.global_category_ids) {
+			await database.runAsync(
+				"INSERT INTO pm_expense_categories (expense_id, global_category_id) VALUES (?, ?)",
+				expenseId, catId
+			);
+		}
+	}
+	if (data.project_category_ids && data.project_category_ids.length > 0) {
+		for (const catId of data.project_category_ids) {
+			await database.runAsync(
+				"INSERT INTO pm_expense_categories (expense_id, project_category_id) VALUES (?, ?)",
+				expenseId, catId
+			);
+		}
+	}
+	return expenseId;
 }
 
 export async function updateExpense(id: number, data: UpdateExpenseData): Promise<void> {
 	const database = await getDatabase();
 	await database.runAsync(
-		`UPDATE pm_expenses SET amount = ?, date = ?, notes = ?, project_id = ?, global_category_id = ?, project_category_id = ? WHERE id = ?`,
+		`UPDATE pm_expenses SET amount = ?, date = ?, notes = ?, project_id = ? WHERE id = ?`,
 		data.amount,
 		data.date,
 		data.notes ?? null,
 		data.project_id ?? null,
-		data.global_category_id ?? null,
-		data.project_category_id ?? null,
 		id
 	);
+	// Replace category links
+	await database.runAsync("DELETE FROM pm_expense_categories WHERE expense_id = ?", id);
+	if (data.global_category_ids && data.global_category_ids.length > 0) {
+		for (const catId of data.global_category_ids) {
+			await database.runAsync(
+				"INSERT INTO pm_expense_categories (expense_id, global_category_id) VALUES (?, ?)",
+				id, catId
+			);
+		}
+	}
+	if (data.project_category_ids && data.project_category_ids.length > 0) {
+		for (const catId of data.project_category_ids) {
+			await database.runAsync(
+				"INSERT INTO pm_expense_categories (expense_id, project_category_id) VALUES (?, ?)",
+				id, catId
+			);
+		}
+	}
 }
 
 export async function deleteExpense(id: number): Promise<void> {
@@ -446,9 +516,10 @@ export async function getMonthlyTotalByCategory(year: number, month: number): Pr
 			COALESCE(gc.icon, pc.icon, '${"\u{1F4E6}"}') as category_icon,
 			COALESCE(gc.color, pc.color, '#607D8B') as category_color,
 			SUM(e.amount) as total
-		FROM pm_expenses e
-		LEFT JOIN pm_global_categories gc ON e.global_category_id = gc.id
-		LEFT JOIN pm_project_categories pc ON e.project_category_id = pc.id
+		FROM pm_expense_categories ec
+		JOIN pm_expenses e ON e.id = ec.expense_id
+		LEFT JOIN pm_global_categories gc ON ec.global_category_id = gc.id
+		LEFT JOIN pm_project_categories pc ON ec.project_category_id = pc.id
 		WHERE substr(e.date, 1, 7) = '${monthStr}'
 		GROUP BY COALESCE(gc.id, 'p' || pc.id)
 		ORDER BY total DESC
@@ -470,4 +541,19 @@ export async function getRecentExpenses(limit: number = 5): Promise<ExpenseWithD
 		`${EXPENSE_WITH_DETAILS_QUERY} ORDER BY e.date DESC, e.created_at DESC LIMIT ?`,
 		limit
 	);
+}
+
+export async function getExpenseCategoryIds(expenseId: number): Promise<{ globalIds: number[]; projectIds: number[] }> {
+	const database = await getDatabase();
+	const rows = await database.getAllAsync<{ global_category_id: number | null; project_category_id: number | null }>(
+		"SELECT global_category_id, project_category_id FROM pm_expense_categories WHERE expense_id = ?",
+		expenseId
+	);
+	const globalIds: number[] = [];
+	const projectIds: number[] = [];
+	for (const row of rows) {
+		if (row.global_category_id != null) globalIds.push(row.global_category_id);
+		if (row.project_category_id != null) projectIds.push(row.project_category_id);
+	}
+	return { globalIds, projectIds };
 }

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
 	View,
 	Text,
@@ -10,9 +10,10 @@ import {
 } from "react-native";
 import { useFocusEffect, useRoute, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { BottomTabScreenProps, BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { LinguaFlipTabParamList, LLQuizStackParamList } from "../../../../types/navigation";
-import { useColors, Colors, spacing } from "../theme";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useColors, Colors, spacing, typography } from "../theme";
 import { useLanguage } from "../i18n";
 import { getMistakesByProject, deleteMistake, clearAllMistakes, Mistake } from "../database";
 import MistakeItem from "../components/MistakeItem";
@@ -21,9 +22,26 @@ type Props = BottomTabScreenProps<LinguaFlipTabParamList, "LLMistakes">;
 
 function useStyles(colors: Colors) {
 	return useMemo(() => StyleSheet.create({
+		safeArea: {
+			flex: 1,
+			backgroundColor: colors.background,
+		},
 		container: {
 			flex: 1,
 			backgroundColor: colors.background,
+		},
+		header: {
+			flexDirection: "row",
+			justifyContent: "space-between",
+			alignItems: "center",
+			paddingHorizontal: spacing.lg,
+			paddingVertical: spacing.md,
+		},
+		headerTitle: {
+			...typography.largeTitle,
+			color: colors.textPrimary,
+			flex: 1,
+			marginRight: spacing.sm,
 		},
 		headerButton: {
 			paddingHorizontal: 12,
@@ -166,7 +184,6 @@ export default function MistakesScreen(_props: Props) {
 	const { t } = useLanguage();
 	const route = useRoute();
 	const stackNavigation = useNavigation<NativeStackNavigationProp<LLQuizStackParamList>>();
-	const tabNavigation = useNavigation<BottomTabNavigationProp<LinguaFlipTabParamList>>();
 	const projectId = (route.params as any)?.projectId as number;
 
 	const [mistakes, setMistakes] = useState<Mistake[]>([]);
@@ -197,19 +214,6 @@ export default function MistakesScreen(_props: Props) {
 		]);
 	}, [t, projectId, loadMistakes]);
 
-	// Update header with Clear All button when there are mistakes
-	useEffect(() => {
-		tabNavigation.setOptions({
-			headerRight: mistakes.length > 0
-				? () => (
-					<TouchableOpacity style={styles.headerButton} onPress={handleClearAll}>
-						<Text style={styles.clearAllText}>{t("llClearAll")}</Text>
-					</TouchableOpacity>
-				)
-				: undefined,
-		});
-	}, [mistakes.length, t, tabNavigation, handleClearAll, styles]);
-
 	const handleDelete = async (mistake: Mistake) => {
 		await deleteMistake(mistake.id);
 		loadMistakes();
@@ -231,7 +235,17 @@ export default function MistakesScreen(_props: Props) {
 		mode === "easy" ? t("llEasy") : mode === "medium" ? t("llMedium") : t("llHard");
 
 	return (
-		<View style={styles.container}>
+		<SafeAreaView style={styles.safeArea} edges={["top"]}>
+			{/* Header */}
+			<View style={styles.header}>
+				<Text style={styles.headerTitle} numberOfLines={1}>{t("llMistakes")}</Text>
+				{mistakes.length > 0 && (
+					<TouchableOpacity style={styles.headerButton} onPress={handleClearAll} activeOpacity={0.7}>
+						<Text style={styles.clearAllText}>{t("llClearAll")}</Text>
+					</TouchableOpacity>
+				)}
+			</View>
+
 			{/* List */}
 			<FlatList
 				data={mistakes}
@@ -318,6 +332,6 @@ export default function MistakesScreen(_props: Props) {
 					</View>
 				</TouchableOpacity>
 			</Modal>
-		</View>
+		</SafeAreaView>
 	);
 }

@@ -3,6 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ThemeProvider, useThemeMode } from "./src/theme";
 import { LanguageProvider } from "./src/i18n";
+import { HomeLayoutProvider } from "./src/settings";
 import RootNavigator from "./src/navigation/RootNavigator";
 
 function AppContent() {
@@ -11,7 +12,9 @@ function AppContent() {
 		<>
 			<StatusBar style={mode === "dark" ? "light" : "dark"} />
 			<LanguageProvider>
-				<RootNavigator />
+				<HomeLayoutProvider>
+					<RootNavigator />
+				</HomeLayoutProvider>
 			</LanguageProvider>
 		</>
 	);

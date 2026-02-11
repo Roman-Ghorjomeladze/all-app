@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { View, Text, Modal, TouchableOpacity, FlatList, StyleSheet } from "react-native";
+import { View, Text, Modal, TouchableOpacity, FlatList, TextInput, StyleSheet } from "react-native";
 import { Person } from "../database";
 import { useColors, Colors, spacing } from "../theme";
 import { useLanguage } from "../../../../i18n";
@@ -50,6 +50,20 @@ function useStyles(colors: Colors) {
 		divider: {
 			height: 1,
 			backgroundColor: colors.border,
+		},
+		searchContainer: {
+			paddingHorizontal: spacing.md,
+			paddingTop: spacing.md,
+		},
+		searchInput: {
+			fontSize: 16,
+			color: colors.textPrimary,
+			backgroundColor: colors.cardBackground,
+			borderRadius: 12,
+			paddingHorizontal: spacing.md,
+			paddingVertical: spacing.sm + 2,
+			borderWidth: 1,
+			borderColor: colors.border,
 		},
 		list: {
 			padding: spacing.md,
@@ -118,10 +132,21 @@ export default function RelationshipPicker({
 	const { t } = useLanguage();
 	const [step, setStep] = useState<Step>("selectPerson");
 	const [selectedPersonId, setSelectedPersonId] = useState<number | null>(null);
+	const [searchQuery, setSearchQuery] = useState("");
 
-	const availablePersons = allPersons.filter(
-		(p) => p.id !== currentPersonId && !existingRelationIds.has(p.id),
-	);
+	const availablePersons = useMemo(() => {
+		const filtered = allPersons.filter(
+			(p) => p.id !== currentPersonId && !existingRelationIds.has(p.id),
+		);
+		if (!searchQuery.trim()) return filtered;
+		const q = searchQuery.trim().toLowerCase();
+		return filtered.filter(
+			(p) =>
+				p.first_name.toLowerCase().includes(q) ||
+				p.last_name.toLowerCase().includes(q) ||
+				`${p.first_name} ${p.last_name}`.toLowerCase().includes(q),
+		);
+	}, [allPersons, currentPersonId, existingRelationIds, searchQuery]);
 
 	const handlePersonSelect = (personId: number) => {
 		setSelectedPersonId(personId);
@@ -138,6 +163,7 @@ export default function RelationshipPicker({
 	const handleClose = () => {
 		setStep("selectPerson");
 		setSelectedPersonId(null);
+		setSearchQuery("");
 		onClose();
 	};
 
@@ -162,11 +188,26 @@ export default function RelationshipPicker({
 
 					<View style={styles.divider} />
 
+					{step === "selectPerson" && (
+						<View style={styles.searchContainer}>
+							<TextInput
+								style={styles.searchInput}
+								value={searchQuery}
+								onChangeText={setSearchQuery}
+								placeholder={t("ftSearchPlaceholder")}
+								placeholderTextColor={colors.textSecondary}
+								autoCorrect={false}
+								clearButtonMode="while-editing"
+							/>
+						</View>
+					)}
+
 					{step === "selectPerson" ? (
 						<FlatList
 							data={availablePersons}
 							keyExtractor={(item) => String(item.id)}
 							style={styles.list}
+							keyboardShouldPersistTaps="handled"
 							renderItem={({ item }) => (
 								<TouchableOpacity
 									style={styles.personRow}

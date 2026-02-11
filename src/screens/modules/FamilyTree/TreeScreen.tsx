@@ -71,9 +71,27 @@ function useStyles(colors: Colors) {
 			color: colors.textSecondary,
 			textAlign: "center",
 		},
+		backButton: {
+			position: "absolute",
+			bottom: 60,
+			left: 24,
+			width: 44,
+			height: 44,
+			borderRadius: 22,
+			backgroundColor: colors.cardBackground,
+			justifyContent: "center",
+			alignItems: "center",
+			shadowColor: colors.shadow,
+			shadowOffset: { width: 0, height: 2 },
+			shadowOpacity: 0.2,
+			shadowRadius: 4,
+			elevation: 4,
+			borderWidth: 1,
+			borderColor: colors.border,
+		},
 		recenterButton: {
 			position: "absolute",
-			bottom: 100,
+			bottom: 60,
 			right: 24,
 			width: 44,
 			height: 44,
@@ -319,6 +337,11 @@ export default function TreeScreen({ navigation, route }: Props) {
 					onAddChild={handleAddChild}
 				/>
 			)}
+
+			{/* Back Button */}
+			<TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.8}>
+				<Ionicons name="chevron-back" size={24} color={colors.accent} />
+			</TouchableOpacity>
 
 			{/* Recenter Button */}
 			{!isEmpty && (

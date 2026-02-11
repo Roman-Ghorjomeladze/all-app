@@ -11,8 +11,18 @@ type MonthChipBarProps = {
 };
 
 const SHORT_MONTH_KEYS = [
-	"january", "february", "march", "april", "may", "june",
-	"july", "august", "september", "october", "november", "december",
+	"january",
+	"february",
+	"march",
+	"april",
+	"may",
+	"june",
+	"july",
+	"august",
+	"september",
+	"october",
+	"november",
+	"december",
 ];
 
 function generateMonths(): { year: number; month: number }[] {
@@ -44,6 +54,7 @@ export default function MonthChipBar({ selectedYear, selectedMonth, onSelect, co
 			ref={scrollRef}
 			horizontal
 			showsHorizontalScrollIndicator={false}
+			style={{ flexGrow: 0 }}
 			contentContainerStyle={styles.container}
 		>
 			{months.map(({ year, month }) => {
@@ -56,9 +67,7 @@ export default function MonthChipBar({ selectedYear, selectedMonth, onSelect, co
 						onPress={() => onSelect(year, month)}
 						activeOpacity={0.7}
 					>
-						<Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
-							{label}
-						</Text>
+						<Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>{label}</Text>
 						{year !== new Date().getFullYear() && (
 							<Text style={[styles.yearText, isSelected && styles.chipTextSelected]}>
 								{String(year).slice(2)}
@@ -77,15 +86,16 @@ function useStyles(colors: Colors) {
 			StyleSheet.create({
 				container: {
 					paddingHorizontal: spacing.lg,
-					paddingVertical: spacing.sm,
+					paddingVertical: spacing.xs,
 					gap: spacing.sm,
+					alignItems: "center",
 				},
 				chip: {
 					flexDirection: "row",
 					alignItems: "center",
 					paddingHorizontal: spacing.md,
-					paddingVertical: spacing.sm,
-					borderRadius: 16,
+					paddingVertical: 10,
+					borderRadius: 18,
 					backgroundColor: colors.chipBackground,
 				},
 				chipSelected: {
@@ -105,6 +115,6 @@ function useStyles(colors: Colors) {
 					marginLeft: 2,
 				},
 			}),
-		[colors]
+		[colors],
 	);
 }

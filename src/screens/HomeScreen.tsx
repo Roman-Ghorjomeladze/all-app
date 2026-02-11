@@ -1,14 +1,17 @@
-import React, { useState, useMemo } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, Modal } from "react-native";
+import React, { useState, useMemo, useCallback } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
 import { useLanguage } from "../i18n";
 import { useThemeMode } from "../theme";
+import { useHomeLayout, HomeLayout } from "../settings";
+import BubblesLayout from "./home/BubblesLayout";
+import OrbitLayout from "./home/OrbitLayout";
+import ConstellationLayout from "./home/ConstellationLayout";
 
 const { width } = Dimensions.get("window");
-const CIRCLE_SIZE = (width - 100) / 2;
 
 type Module = {
 	id: string;
@@ -20,12 +23,14 @@ type Module = {
 
 const modules: Module[] = [
 	{ id: "1", name: "Todo", color: "#FF8C00", icon: "\u{2705}", route: "Todo" },
-	{ id: "2", name: "Family Tree", color: "#6B8E23", icon: "🌳", route: "FamilyTree" },
+	{ id: "2", name: "Family Tree", color: "#6B8E23", icon: "\u{1F333}", route: "FamilyTree" },
 	{ id: "3", name: "Flags", color: "#1A5276", icon: "\u{1F1EC}\u{1F1EA}", route: "Flags" },
 	{ id: "4", name: "LinguaFlip", color: "#008B8B", icon: "\u{1F30E}", route: "LinguaFlip" },
 	{ id: "5", name: "Birthdays", color: "#E91E63", icon: "\u{1F382}", route: "Birthdays" },
-	{ id: "6", name: "CircleFlow", color: "#FF6B8A", icon: "🌸", route: "CircleFlow" },
+	{ id: "6", name: "CircleFlow", color: "#FF6B8A", icon: "\u{1F338}", route: "CircleFlow" },
 	{ id: "7", name: "Pocket", color: "#2E7D32", icon: "\u{1F4B0}", route: "PocketManager" },
+	{ id: "8", name: "Meal Planner", color: "#FF6B35", icon: "\u{1F37D}\u{FE0F}", route: "MealPlanner" },
+	{ id: "9", name: "FitLog", color: "#FF5722", icon: "\u{23F1}\u{FE0F}", route: "FitLog" },
 ];
 
 function getHomeColors(mode: "light" | "dark") {
@@ -60,9 +65,16 @@ type Props = {
 	navigation: NativeStackNavigationProp<RootStackParamList, "Home">;
 };
 
+const LAYOUT_OPTIONS: { key: HomeLayout; icon: string }[] = [
+	{ key: "bubbles", icon: "\u{1FAE7}" },
+	{ key: "orbit", icon: "\u{1FA90}" },
+	{ key: "constellation", icon: "\u{2728}" },
+];
+
 export default function HomeScreen({ navigation }: Props) {
 	const { language, setLanguage, t } = useLanguage();
 	const { mode, toggleMode } = useThemeMode();
+	const { layout, setLayout } = useHomeLayout();
 	const [settingsVisible, setSettingsVisible] = useState(false);
 	const homeColors = getHomeColors(mode);
 	const styles = useStyles(homeColors);
@@ -71,32 +83,63 @@ export default function HomeScreen({ navigation }: Props) {
 		setLanguage(language === "en" ? "ka" : "en");
 	};
 
+	const handleModulePress = useCallback(
+		(route: keyof RootStackParamList) => {
+			navigation.navigate(route);
+		},
+		[navigation]
+	);
+
+	// For constellation, override the settings icon color to white
+	const settingsIconColor =
+		layout === "constellation" ? "#D9E0EE" : homeColors.settingsIcon;
+
+	const layoutColors = useMemo(() => {
+		if (layout === "constellation") {
+			return {
+				...homeColors,
+				background: "#0B0D21",
+			};
+		}
+		return homeColors;
+	}, [layout, homeColors]);
+
 	return (
-		<SafeAreaView style={styles.safeArea}>
-			<ScrollView contentContainerStyle={styles.container}>
-				{/* Settings gear icon */}
-				<View style={styles.settingsRow}>
-					<TouchableOpacity onPress={() => setSettingsVisible(true)} activeOpacity={0.7}>
-						<Ionicons name="settings-outline" size={26} color={homeColors.settingsIcon} />
-					</TouchableOpacity>
-				</View>
+		<SafeAreaView
+			style={[
+				styles.safeArea,
+				layout === "constellation" && { backgroundColor: "#0B0D21" },
+			]}
+		>
+			{/* Settings gear icon — floated on top */}
+			<View style={styles.settingsRow}>
+				<TouchableOpacity onPress={() => setSettingsVisible(true)} activeOpacity={0.7}>
+					<Ionicons name="settings-outline" size={26} color={settingsIconColor} />
+				</TouchableOpacity>
+			</View>
 
-				{/* <Text style={styles.title}>{t("appTitle")}</Text> */}
-
-				<View style={styles.gridContainer}>
-					{modules.map((module) => (
-						<TouchableOpacity
-							key={module.id}
-							style={[styles.circle, { backgroundColor: module.color }]}
-							onPress={() => navigation.navigate(module.route)}
-							activeOpacity={0.7}
-						>
-							<Text style={styles.icon}>{module.icon}</Text>
-							<Text style={styles.moduleName}>{module.name}</Text>
-						</TouchableOpacity>
-					))}
-				</View>
-			</ScrollView>
+			{/* Layout */}
+			{layout === "bubbles" && (
+				<BubblesLayout
+					modules={modules}
+					onModulePress={handleModulePress}
+					colors={layoutColors}
+				/>
+			)}
+			{layout === "orbit" && (
+				<OrbitLayout
+					modules={modules}
+					onModulePress={handleModulePress}
+					colors={layoutColors}
+				/>
+			)}
+			{layout === "constellation" && (
+				<ConstellationLayout
+					modules={modules}
+					onModulePress={handleModulePress}
+					colors={layoutColors}
+				/>
+			)}
 
 			{/* Settings Modal */}
 			<Modal
@@ -155,6 +198,23 @@ export default function HomeScreen({ navigation }: Props) {
 								</View>
 							</TouchableOpacity>
 						</View>
+
+						{/* Layout Toggle */}
+						<View style={styles.settingRow}>
+							<Text style={styles.settingLabel}>{t("homeLayout")}</Text>
+							<View style={styles.layoutToggle}>
+								{LAYOUT_OPTIONS.map((opt) => (
+									<TouchableOpacity
+										key={opt.key}
+										style={[styles.layoutOption, layout === opt.key && styles.layoutOptionActive]}
+										onPress={() => setLayout(opt.key)}
+										activeOpacity={0.7}
+									>
+										<Text style={styles.layoutOptionIcon}>{opt.icon}</Text>
+									</TouchableOpacity>
+								))}
+							</View>
+						</View>
 					</View>
 				</TouchableOpacity>
 			</Modal>
@@ -172,50 +232,12 @@ function useStyles(c: HomeColors) {
 					flex: 1,
 					backgroundColor: c.background,
 				},
-				container: {
-					flexGrow: 1,
-					paddingTop: 20,
-					paddingHorizontal: 20,
-				},
 				settingsRow: {
 					alignItems: "flex-end",
-					marginBottom: 20,
-				},
-				title: {
-					fontSize: 32,
-					fontWeight: "bold",
-					textAlign: "center",
-					marginBottom: 30,
-					color: c.textPrimary,
-				},
-				gridContainer: {
-					flexDirection: "row",
-					flexWrap: "wrap",
-					justifyContent: "space-between",
-					paddingBottom: 40,
-				},
-				circle: {
-					width: CIRCLE_SIZE,
-					height: CIRCLE_SIZE,
-					borderRadius: CIRCLE_SIZE / 2,
-					justifyContent: "center",
-					alignItems: "center",
-					marginBottom: 20,
-					shadowColor: c.shadow,
-					shadowOffset: { width: 0, height: 4 },
-					shadowOpacity: 0.2,
-					shadowRadius: 8,
-					elevation: 8,
-				},
-				icon: {
-					fontSize: 48,
-					marginBottom: 10,
-				},
-				moduleName: {
-					fontSize: 16,
-					fontWeight: "600",
-					color: c.moduleNameColor,
-					textAlign: "center",
+					paddingHorizontal: 20,
+					paddingTop: 10,
+					paddingBottom: 4,
+					zIndex: 10,
 				},
 				// Modal
 				modalOverlay: {
@@ -289,6 +311,26 @@ function useStyles(c: HomeColors) {
 				},
 				languageTextActive: {
 					color: c.moduleNameColor,
+				},
+				// Layout toggle
+				layoutToggle: {
+					flexDirection: "row",
+					backgroundColor: c.background,
+					borderRadius: 20,
+					padding: 4,
+					minWidth: 145,
+				},
+				layoutOption: {
+					flex: 1,
+					paddingVertical: 8,
+					borderRadius: 16,
+					alignItems: "center",
+				},
+				layoutOptionActive: {
+					backgroundColor: c.toggleActiveBg,
+				},
+				layoutOptionIcon: {
+					fontSize: 18,
 				},
 			}),
 		[c],

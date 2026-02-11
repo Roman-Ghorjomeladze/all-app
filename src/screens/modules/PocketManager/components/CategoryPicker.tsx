@@ -6,12 +6,12 @@ import CategoryChip from "./CategoryChip";
 
 type CategoryPickerProps = {
 	categories: (GlobalCategory | ProjectCategory)[];
-	selectedId: number | null;
-	onSelect: (id: number) => void;
+	selectedIds: number[];
+	onToggle: (id: number) => void;
 	colors: Colors;
 };
 
-export default function CategoryPicker({ categories, selectedId, onSelect, colors }: CategoryPickerProps) {
+export default function CategoryPicker({ categories, selectedIds, onToggle, colors }: CategoryPickerProps) {
 	const styles = useStyles();
 
 	return (
@@ -27,8 +27,8 @@ export default function CategoryPicker({ categories, selectedId, onSelect, color
 					icon={cat.icon}
 					name={cat.name}
 					color={cat.color}
-					selected={selectedId === cat.id}
-					onPress={() => onSelect(cat.id)}
+					selected={selectedIds.includes(cat.id)}
+					onPress={() => onToggle(cat.id)}
 					colors={colors}
 				/>
 			))}

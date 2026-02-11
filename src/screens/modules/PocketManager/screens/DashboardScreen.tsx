@@ -137,11 +137,11 @@ export default function DashboardScreen() {
 							activeOpacity={0.7}
 						>
 							<View style={styles.recentLeft}>
-								{expense.category_icon && (
-									<Text style={styles.recentIcon}>{expense.category_icon}</Text>
+								{expense.category_icons && (
+									<Text style={styles.recentIcon}>{expense.category_icons.split("|||")[0]}</Text>
 								)}
 								<View>
-									<Text style={styles.recentCategory}>{expense.category_name || "—"}</Text>
+									<Text style={styles.recentCategory}>{expense.category_names ? expense.category_names.split("|||")[0] : "—"}</Text>
 									<Text style={styles.recentDate}>
 										{new Date(expense.date + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" })}
 									</Text>

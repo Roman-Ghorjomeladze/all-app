@@ -8,6 +8,8 @@ export type RootStackParamList = {
 	Birthdays: undefined;
 	Todo: undefined;
 	PocketManager: undefined;
+	MealPlanner: undefined;
+	FitLog: undefined;
 	Module4: undefined;
 	Module5: undefined;
 };
@@ -102,4 +104,40 @@ export type PocketManagerTabParamList = {
 	PMDashboard: undefined;
 	PMExpenses: undefined;
 	PMProjects: undefined;
+};
+
+export type MealPlannerStackParamList = {
+	MealPlannerTabs: undefined;
+	MPRecipeDetail: { recipeId: number };
+	MPRecipeForm:
+		| { mode: "create" }
+		| { mode: "edit"; recipeId: number };
+	MPRecipePicker: { date: string; mealType: string };
+};
+
+export type MealPlannerTabParamList = {
+	MPRecipes: undefined;
+	MPMealPlan: undefined;
+	MPShopping: undefined;
+	MPCalorieBook: undefined;
+};
+
+export type FitLogStackParamList = {
+	FitLogTabs: undefined;
+	FLWorkoutForm:
+		| { mode: "create" }
+		| { mode: "edit"; workoutId: number }
+		| { mode: "clone"; workoutId: number };
+	FLExerciseForm:
+		| { mode: "create" }
+		| { mode: "edit"; exerciseId: number };
+	FLPlayer: { workoutId: number };
+	FLYouTubePreview: { url: string; title: string };
+};
+
+export type FitLogTabParamList = {
+	FLWorkouts: undefined;
+	FLHistory: undefined;
+	FLStats: undefined;
+	FLSounds: undefined;
 };
