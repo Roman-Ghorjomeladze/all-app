@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import React, { useMemo, useState } from "react";
+import { View, Text, StyleSheet, LayoutChangeEvent } from "react-native";
 import Animated, {
 	useSharedValue,
 	useAnimatedStyle,
@@ -12,8 +12,6 @@ import Animated, {
 	Easing,
 } from "react-native-reanimated";
 import { RootStackParamList } from "../../types/navigation";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 type Module = {
 	id: string;
@@ -40,11 +38,6 @@ type Props = {
 // Smaller bubbles to fit inside the hexagon
 const BUBBLE_SIZES = [82, 80, 78, 80, 82, 78, 80, 78, 76];
 
-// Hexagon geometry — flat-top regular hexagon, nearly full screen width
-const HEX_CENTER_X = SCREEN_WIDTH / 2;
-const HEX_CENTER_Y = (SCREEN_HEIGHT - 160) / 2; // Account for safe area + settings
-const HEX_RADIUS = (SCREEN_WIDTH - 30) / 2; // Full width minus ~15px padding each side
-
 // 6 vertices of a flat-top regular hexagon
 function getHexVertices(cx: number, cy: number, r: number) {
 	const vertices: { x: number; y: number }[] = [];
@@ -64,40 +57,47 @@ function getHexEdges(vertices: { x: number; y: number }[], cx: number, cy: numbe
 	for (let i = 0; i < 6; i++) {
 		const a = vertices[i];
 		const b = vertices[(i + 1) % 6];
-		// Edge direction
 		const ex = b.x - a.x;
 		const ey = b.y - a.y;
-		// Outward normal (perpendicular)
 		let nx = ey;
 		let ny = -ex;
 		const len = Math.sqrt(nx * nx + ny * ny);
 		nx /= len;
 		ny /= len;
-		// Make sure normal points inward (toward center)
 		const toCenterX = cx - a.x;
 		const toCenterY = cy - a.y;
 		if (nx * toCenterX + ny * toCenterY < 0) {
 			nx = -nx;
 			ny = -ny;
 		}
-		// Distance from origin along normal
 		const d = nx * a.x + ny * a.y;
 		edges.push({ nx, ny, d });
 	}
 	return edges;
 }
 
-const HEX_VERTICES = getHexVertices(HEX_CENTER_X, HEX_CENTER_Y, HEX_RADIUS);
-const HEX_EDGES = getHexEdges(HEX_VERTICES, HEX_CENTER_X, HEX_CENTER_Y);
+// Compute hex geometry from actual container dimensions
+function computeHexGeometry(containerWidth: number, containerHeight: number) {
+	const hexCenterX = containerWidth / 2;
+	const hexCenterY = containerHeight / 2;
+	// Hex width = 2*r, hex height = sqrt(3)*r for flat-top
+	// Fit to container: r <= (w - 30)/2 and sqrt(3)*r <= (h - 30)
+	const maxRadiusW = (containerWidth - 30) / 2;
+	const maxRadiusH = (containerHeight - 30) / Math.sqrt(3);
+	const hexRadius = Math.min(maxRadiusW, maxRadiusH);
+	const vertices = getHexVertices(hexCenterX, hexCenterY, hexRadius);
+	const edges = getHexEdges(vertices, hexCenterX, hexCenterY);
+	return { hexCenterX, hexCenterY, hexRadius, vertices, edges };
+}
 
 // Place 9 bubbles inside the hex: 3 rows (3-3-3) centered
-function computePositions(): { x: number; y: number }[] {
+function computePositions(hexCenterX: number, hexCenterY: number): { x: number; y: number }[] {
 	const positions: { x: number; y: number }[] = [];
-	const rowOffsets = [-100, 0, 100]; // 3 rows
+	const rowOffsets = [-100, 0, 100];
 	const colConfigs = [
-		[-90, 0, 90],   // row 0: 3 bubbles
-		[-90, 0, 90],   // row 1: 3 bubbles
-		[-90, 0, 90],   // row 2: 3 bubbles
+		[-90, 0, 90],
+		[-90, 0, 90],
+		[-90, 0, 90],
 	];
 
 	for (let row = 0; row < 3; row++) {
@@ -105,8 +105,8 @@ function computePositions(): { x: number; y: number }[] {
 			const idx = row * 3 + col;
 			const size = BUBBLE_SIZES[idx];
 			positions.push({
-				x: HEX_CENTER_X + colConfigs[row][col] - size / 2,
-				y: HEX_CENTER_Y + rowOffsets[row] - size / 2,
+				x: hexCenterX + colConfigs[row][col] - size / 2,
+				y: hexCenterY + rowOffsets[row] - size / 2,
 			});
 		}
 	}
@@ -141,7 +141,7 @@ function lightenColor(hex: string, amount: number): string {
 }
 
 // Glowing hexagon border component
-function HexagonBorder() {
+function HexagonBorder({ vertices }: { vertices: { x: number; y: number }[] }) {
 	const glowPulse = useSharedValue(0);
 
 	React.useEffect(() => {
@@ -156,11 +156,10 @@ function HexagonBorder() {
 		opacity: 0.3 + glowPulse.value * 0.2,
 	}));
 
-	// Render 6 line segments
 	const lines = [];
 	for (let i = 0; i < 6; i++) {
-		const a = HEX_VERTICES[i];
-		const b = HEX_VERTICES[(i + 1) % 6];
+		const a = vertices[i];
+		const b = vertices[(i + 1) % 6];
 		const dx = b.x - a.x;
 		const dy = b.y - a.y;
 		const length = Math.sqrt(dx * dx + dy * dy);
@@ -183,11 +182,10 @@ function HexagonBorder() {
 		);
 	}
 
-	// Glow layer behind the edges
 	const glowLines = [];
 	for (let i = 0; i < 6; i++) {
-		const a = HEX_VERTICES[i];
-		const b = HEX_VERTICES[(i + 1) % 6];
+		const a = vertices[i];
+		const b = vertices[(i + 1) % 6];
 		const dx = b.x - a.x;
 		const dy = b.y - a.y;
 		const length = Math.sqrt(dx * dx + dy * dy);
@@ -267,7 +265,6 @@ function Bubble({
 				animatedStyle,
 			]}
 		>
-			{/* Outer glow halo */}
 			<View
 				style={[
 					styles.glowHalo,
@@ -280,8 +277,6 @@ function Bubble({
 					},
 				]}
 			/>
-
-			{/* Main bubble with 3D gradient layers */}
 			<View
 				style={[
 					styles.bubble,
@@ -294,7 +289,6 @@ function Bubble({
 					},
 				]}
 			>
-				{/* 3D highlight — top-left specular reflection */}
 				<View
 					style={[
 						styles.specularHighlight,
@@ -308,8 +302,6 @@ function Bubble({
 						},
 					]}
 				/>
-
-				{/* Inner light gradient — bottom fill for depth */}
 				<View
 					style={[
 						styles.bottomShade,
@@ -322,8 +314,6 @@ function Bubble({
 						},
 					]}
 				/>
-
-				{/* Rim light — thin bright edge at top */}
 				<View
 					style={[
 						styles.rimLight,
@@ -334,8 +324,6 @@ function Bubble({
 						},
 					]}
 				/>
-
-				{/* Content */}
 				<TouchableBubble onPress={handlePress}>
 					<Text style={[styles.icon, { fontSize: size * 0.35 }]}>{module.icon}</Text>
 					<Text style={[styles.name, { fontSize: size * 0.12 }]} numberOfLines={1}>
@@ -347,7 +335,6 @@ function Bubble({
 	);
 }
 
-// Separate touchable to avoid Animated.View tap issues
 function TouchableBubble({ children, onPress }: { children: React.ReactNode; onPress: () => void }) {
 	return (
 		<View style={styles.touchArea} onTouchEnd={onPress}>
@@ -356,11 +343,24 @@ function TouchableBubble({ children, onPress }: { children: React.ReactNode; onP
 	);
 }
 
-export default function BubblesLayout({ modules, onModulePress, colors }: Props) {
-	const positions = useMemo(() => computePositions(), []);
+// Inner component that holds all the physics shared values — remounts on orientation change
+function BubblesPhysics({
+	modules,
+	onModulePress,
+	colors,
+	containerWidth,
+	containerHeight,
+}: Props & { containerWidth: number; containerHeight: number }) {
+	const hex = useMemo(
+		() => computeHexGeometry(containerWidth, containerHeight),
+		[containerWidth, containerHeight],
+	);
+	const positions = useMemo(
+		() => computePositions(hex.hexCenterX, hex.hexCenterY),
+		[hex.hexCenterX, hex.hexCenterY],
+	);
 	const count = Math.min(modules.length, BUBBLE_SIZES.length);
 
-	// Shared values for each bubble's offset
 	const offsetsX: SharedValue<number>[] = [];
 	const offsetsY: SharedValue<number>[] = [];
 	for (let i = 0; i < count; i++) {
@@ -368,7 +368,6 @@ export default function BubblesLayout({ modules, onModulePress, colors }: Props)
 		offsetsY.push(useSharedValue(0));
 	}
 
-	// Velocities stored as shared values for UI thread mutation
 	const velocitiesX: SharedValue<number>[] = [];
 	const velocitiesY: SharedValue<number>[] = [];
 	for (let i = 0; i < count; i++) {
@@ -376,25 +375,20 @@ export default function BubblesLayout({ modules, onModulePress, colors }: Props)
 		velocitiesY.push(useSharedValue(INITIAL_VELOCITIES[i].vy));
 	}
 
-	// Pre-compute hex edge data for worklet (plain arrays, no objects)
-	const hexNx = useMemo(() => HEX_EDGES.map(e => e.nx), []);
-	const hexNy = useMemo(() => HEX_EDGES.map(e => e.ny), []);
-	const hexD = useMemo(() => HEX_EDGES.map(e => e.d), []);
+	const hexNx = useMemo(() => hex.edges.map(e => e.nx), [hex.edges]);
+	const hexNy = useMemo(() => hex.edges.map(e => e.ny), [hex.edges]);
+	const hexD = useMemo(() => hex.edges.map(e => e.d), [hex.edges]);
 
-	// Physics simulation running on UI thread
 	useFrameCallback(() => {
 		"worklet";
 
-		// Update positions
 		for (let i = 0; i < count; i++) {
 			offsetsX[i].value += velocitiesX[i].value;
 			offsetsY[i].value += velocitiesY[i].value;
 
-			// Apply damping
 			velocitiesX[i].value *= DAMPING;
 			velocitiesY[i].value *= DAMPING;
 
-			// Re-nudge if too slow
 			const speed = Math.sqrt(
 				velocitiesX[i].value * velocitiesX[i].value +
 				velocitiesY[i].value * velocitiesY[i].value
@@ -405,7 +399,6 @@ export default function BubblesLayout({ modules, onModulePress, colors }: Props)
 				velocitiesY[i].value = Math.sin(pseudo) * MIN_SPEED * 1.5;
 			}
 
-			// Hexagon wall collision
 			const r = BUBBLE_SIZES[i] / 2;
 			const cx = positions[i].x + r + offsetsX[i].value;
 			const cy = positions[i].y + r + offsetsY[i].value;
@@ -414,15 +407,12 @@ export default function BubblesLayout({ modules, onModulePress, colors }: Props)
 				const nx = hexNx[e];
 				const ny = hexNy[e];
 				const d = hexD[e];
-				// Signed distance from bubble center to edge (positive = inside)
 				const dist = nx * cx + ny * cy - d;
 				if (dist < r) {
-					// Push bubble back inside
 					const pushBack = r - dist;
 					offsetsX[i].value += nx * pushBack;
 					offsetsY[i].value += ny * pushBack;
 
-					// Reflect velocity off the edge
 					const vDotN = velocitiesX[i].value * nx + velocitiesY[i].value * ny;
 					if (vDotN < 0) {
 						velocitiesX[i].value -= 2 * vDotN * nx * WALL_BOUNCE;
@@ -432,7 +422,6 @@ export default function BubblesLayout({ modules, onModulePress, colors }: Props)
 			}
 		}
 
-		// Collision detection & elastic response between all pairs
 		for (let i = 0; i < count; i++) {
 			for (let j = i + 1; j < count; j++) {
 				const ri = BUBBLE_SIZES[i] / 2;
@@ -482,7 +471,7 @@ export default function BubblesLayout({ modules, onModulePress, colors }: Props)
 
 	return (
 		<View style={[styles.container, { backgroundColor: colors.background }]}>
-			<HexagonBorder />
+			<HexagonBorder vertices={hex.vertices} />
 			{modules.slice(0, count).map((module, index) => (
 				<Bubble
 					key={module.id}
@@ -494,6 +483,33 @@ export default function BubblesLayout({ modules, onModulePress, colors }: Props)
 					onPress={onModulePress}
 				/>
 			))}
+		</View>
+	);
+}
+
+export default function BubblesLayout({ modules, onModulePress, colors }: Props) {
+	const [layout, setLayout] = useState<{ width: number; height: number } | null>(null);
+
+	const handleLayout = (e: LayoutChangeEvent) => {
+		const { width, height } = e.nativeEvent.layout;
+		setLayout({ width, height });
+	};
+
+	// Use a key based on rounded dimensions so the physics remounts on orientation change
+	const layoutKey = layout ? `${Math.round(layout.width)}_${Math.round(layout.height)}` : "init";
+
+	return (
+		<View style={[styles.container, { backgroundColor: colors.background }]} onLayout={handleLayout}>
+			{layout && (
+				<BubblesPhysics
+					key={layoutKey}
+					modules={modules}
+					onModulePress={onModulePress}
+					colors={colors}
+					containerWidth={layout.width}
+					containerHeight={layout.height}
+				/>
+			)}
 		</View>
 	);
 }

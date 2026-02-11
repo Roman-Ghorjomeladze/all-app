@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Modal } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -10,8 +10,6 @@ import { useHomeLayout, HomeLayout } from "../settings";
 import BubblesLayout from "./home/BubblesLayout";
 import OrbitLayout from "./home/OrbitLayout";
 import ConstellationLayout from "./home/ConstellationLayout";
-
-const { width } = Dimensions.get("window");
 
 type Module = {
 	id: string;

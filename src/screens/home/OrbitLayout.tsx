@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, LayoutChangeEvent } from "react-native";
 import Animated, {
 	useSharedValue,
 	useAnimatedStyle,
@@ -10,8 +10,6 @@ import Animated, {
 	Easing,
 } from "react-native-reanimated";
 import { RootStackParamList } from "../../types/navigation";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 type Module = {
 	id: string;
@@ -90,7 +88,6 @@ function OrbitingIcon({
 			false
 		);
 
-		// Glow pulsing animation
 		glowPulse.value = withRepeat(
 			withTiming(1, {
 				duration: 2500 + config.ring * 500,
@@ -139,7 +136,6 @@ function OrbitingIcon({
 				animatedStyle,
 			]}
 		>
-			{/* Glow halo behind the planet */}
 			<Animated.View
 				style={[
 					styles.planetGlow,
@@ -153,8 +149,6 @@ function OrbitingIcon({
 					glowStyle,
 				]}
 			/>
-
-			{/* Main planet body */}
 			<View
 				style={[
 					styles.orbitIcon,
@@ -167,7 +161,6 @@ function OrbitingIcon({
 					},
 				]}
 			>
-				{/* 3D specular highlight — top-left shine */}
 				<View
 					style={[
 						styles.planetHighlight,
@@ -181,8 +174,6 @@ function OrbitingIcon({
 						},
 					]}
 				/>
-
-				{/* Bottom shadow for 3D depth */}
 				<View
 					style={[
 						styles.planetBottomShade,
@@ -194,8 +185,6 @@ function OrbitingIcon({
 						},
 					]}
 				/>
-
-				{/* Rim light ring */}
 				<View
 					style={[
 						styles.planetRim,
@@ -206,8 +195,6 @@ function OrbitingIcon({
 						},
 					]}
 				/>
-
-				{/* Content */}
 				<View style={styles.touchArea} onTouchEnd={handlePress}>
 					<Text style={styles.icon}>{module.icon}</Text>
 					<Text style={styles.name} numberOfLines={1}>{module.name}</Text>
@@ -218,7 +205,7 @@ function OrbitingIcon({
 }
 
 /** Animated center "sun" with pulsing glow */
-function CenterSun({ centerX, centerY, colors }: { centerX: number; centerY: number; colors: HomeColors }) {
+function CenterSun({ centerX, centerY }: { centerX: number; centerY: number }) {
 	const pulse = useSharedValue(0);
 
 	useEffect(() => {
@@ -241,7 +228,6 @@ function CenterSun({ centerX, centerY, colors }: { centerX: number; centerY: num
 
 	return (
 		<>
-			{/* Outer ray glow */}
 			<Animated.View
 				style={[
 					styles.sunRay,
@@ -255,7 +241,6 @@ function CenterSun({ centerX, centerY, colors }: { centerX: number; centerY: num
 					sunRayStyle,
 				]}
 			/>
-			{/* Middle glow ring */}
 			<Animated.View
 				style={[
 					styles.sunGlow,
@@ -269,7 +254,6 @@ function CenterSun({ centerX, centerY, colors }: { centerX: number; centerY: num
 					sunGlowStyle,
 				]}
 			/>
-			{/* Center sun body */}
 			<View
 				style={[
 					styles.centerDot,
@@ -279,7 +263,6 @@ function CenterSun({ centerX, centerY, colors }: { centerX: number; centerY: num
 					},
 				]}
 			>
-				{/* Highlight */}
 				<View style={styles.sunHighlight} />
 				<Text style={styles.centerEmoji}>{"\u2B50"}</Text>
 			</View>
@@ -288,66 +271,75 @@ function CenterSun({ centerX, centerY, colors }: { centerX: number; centerY: num
 }
 
 export default function OrbitLayout({ modules, onModulePress, colors }: Props) {
-	// Center of orbit area (account for settings row + tab bar)
-	const centerX = SCREEN_WIDTH / 2;
-	const centerY = (SCREEN_HEIGHT - 200) / 2;
+	const [layout, setLayout] = useState<{ width: number; height: number } | null>(null);
+
+	const handleLayout = (e: LayoutChangeEvent) => {
+		const { width, height } = e.nativeEvent.layout;
+		setLayout({ width, height });
+	};
+
+	// Center of orbit area — use actual container center
+	const centerX = layout ? layout.width / 2 : 0;
+	const centerY = layout ? layout.height / 2 : 0;
 
 	const ringRadii = [75, 135, 190];
 
 	return (
-		<View style={[styles.container, { backgroundColor: colors.background }]}>
-			{/* Orbit ring indicators with glow */}
-			{ringRadii.map((radius, i) => (
-				<View key={`ring-${i}`}>
-					{/* Glowing ring trail */}
-					<View
-						style={[
-							styles.ringGlow,
-							{
-								width: radius * 2 + 8,
-								height: radius * 2 + 8,
-								borderRadius: radius + 4,
-								left: centerX - radius - 4,
-								top: centerY - radius - 4,
-								borderColor: colors.textSecondary + "10",
-								shadowColor: colors.textSecondary,
-							},
-						]}
-					/>
-					{/* Main ring line */}
-					<View
-						style={[
-							styles.ringIndicator,
-							{
-								width: radius * 2,
-								height: radius * 2,
-								borderRadius: radius,
-								left: centerX - radius,
-								top: centerY - radius,
-								borderColor: colors.textSecondary + "18",
-							},
-						]}
-					/>
-				</View>
-			))}
+		<View style={[styles.container, { backgroundColor: colors.background }]} onLayout={handleLayout}>
+			{layout && (
+				<>
+					{/* Orbit ring indicators with glow */}
+					{ringRadii.map((radius, i) => (
+						<View key={`ring-${i}`}>
+							<View
+								style={[
+									styles.ringGlow,
+									{
+										width: radius * 2 + 8,
+										height: radius * 2 + 8,
+										borderRadius: radius + 4,
+										left: centerX - radius - 4,
+										top: centerY - radius - 4,
+										borderColor: colors.textSecondary + "10",
+										shadowColor: colors.textSecondary,
+									},
+								]}
+							/>
+							<View
+								style={[
+									styles.ringIndicator,
+									{
+										width: radius * 2,
+										height: radius * 2,
+										borderRadius: radius,
+										left: centerX - radius,
+										top: centerY - radius,
+										borderColor: colors.textSecondary + "18",
+									},
+								]}
+							/>
+						</View>
+					))}
 
-			{/* Center sun with animated glow */}
-			<CenterSun centerX={centerX} centerY={centerY} colors={colors} />
+					{/* Center sun with animated glow */}
+					<CenterSun centerX={centerX} centerY={centerY} />
 
-			{/* Orbiting icons */}
-			{modules.map((module, index) => {
-				if (index >= ORBIT_CONFIG.length) return null;
-				return (
-					<OrbitingIcon
-						key={module.id}
-						module={module}
-						config={ORBIT_CONFIG[index]}
-						centerX={centerX}
-						centerY={centerY}
-						onPress={onModulePress}
-					/>
-				);
-			})}
+					{/* Orbiting icons */}
+					{modules.map((module, index) => {
+						if (index >= ORBIT_CONFIG.length) return null;
+						return (
+							<OrbitingIcon
+								key={module.id}
+								module={module}
+								config={ORBIT_CONFIG[index]}
+								centerX={centerX}
+								centerY={centerY}
+								onPress={onModulePress}
+							/>
+						);
+					})}
+				</>
+			)}
 		</View>
 	);
 }
@@ -370,7 +362,6 @@ const styles = StyleSheet.create({
 		shadowRadius: 8,
 		elevation: 0,
 	},
-	// Center sun styles
 	sunRay: {
 		position: "absolute",
 		backgroundColor: "#FFD700",
@@ -411,7 +402,6 @@ const styles = StyleSheet.create({
 		textShadowOffset: { width: 0, height: 2 },
 		textShadowRadius: 4,
 	},
-	// Orbiting planet styles
 	orbitIconWrapper: {
 		position: "absolute",
 		justifyContent: "center",
@@ -429,7 +419,6 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		borderWidth: 1,
 		borderColor: "rgba(255,255,255,0.2)",
-		// Colored 3D shadow
 		shadowOffset: { width: 0, height: 6 },
 		shadowOpacity: 0.5,
 		shadowRadius: 14,

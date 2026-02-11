@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { View, Text, StyleSheet, LayoutChangeEvent } from "react-native";
 import Animated, {
 	useSharedValue,
 	useAnimatedStyle,
@@ -10,8 +10,6 @@ import Animated, {
 	Easing,
 } from "react-native-reanimated";
 import { RootStackParamList } from "../../types/navigation";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 type Module = {
 	id: string;
@@ -30,7 +28,6 @@ type Props = {
 const BG_COLOR = "#0B0D21";
 
 // Constellation positions (percentages of usable area)
-// Centered horizontally — xPct values clustered around 0.5
 const STAR_POSITIONS = [
 	{ xPct: 0.22, yPct: 0.1 },
 	{ xPct: 0.72, yPct: 0.08 },
@@ -46,28 +43,27 @@ const STAR_POSITIONS = [
 // Which stars to connect — creating a constellation shape
 const CONNECTIONS: [number, number][] = [
 	[0, 2],
-	[2, 1], // top crown
+	[2, 1],
 	[0, 3],
-	[1, 4], // sides down
+	[1, 4],
 	[3, 5],
-	[4, 5], // converge center
+	[4, 5],
 	[5, 6],
-	[5, 7], // bottom spread
+	[5, 7],
 	[3, 6],
-	[4, 7], // outer edges
+	[4, 7],
 	[6, 8],
-	[7, 8], // bottom converge
+	[7, 8],
 ];
 
 const ICON_SIZE = 69;
 
-// Background twinkling stars
 const NUM_PARTICLES = 35;
 
-function generateParticles() {
+function generateParticles(containerWidth: number, containerHeight: number) {
 	return Array.from({ length: NUM_PARTICLES }, (_, i) => ({
-		x: Math.random() * SCREEN_WIDTH,
-		y: Math.random() * (SCREEN_HEIGHT - 180),
+		x: Math.random() * containerWidth,
+		y: Math.random() * containerHeight,
 		size: 1.5 + Math.random() * 2.5,
 		duration: 1000 + Math.random() * 3000,
 		delay: Math.random() * 2000,
@@ -172,7 +168,6 @@ function ConstellationStar({
 		<Animated.View
 			style={[styles.starContainer, { left: x - ICON_SIZE / 2, top: y - ICON_SIZE / 2 }, animatedStyle]}
 		>
-			{/* Glow halo */}
 			<Animated.View
 				style={[
 					styles.glow,
@@ -195,8 +190,22 @@ function ConstellationStar({
 	);
 }
 
-export default function ConstellationLayout({ modules, onModulePress }: Props) {
-	const particles = useMemo(() => generateParticles(), []);
+// Inner component — remounts on layout change to regenerate particles
+function ConstellationInner({
+	modules,
+	onModulePress,
+	containerWidth,
+	containerHeight,
+}: {
+	modules: Module[];
+	onModulePress: (route: keyof RootStackParamList) => void;
+	containerWidth: number;
+	containerHeight: number;
+}) {
+	const particles = useMemo(
+		() => generateParticles(containerWidth, containerHeight),
+		[containerWidth, containerHeight],
+	);
 
 	const driftX = useSharedValue(0);
 
@@ -208,40 +217,35 @@ export default function ConstellationLayout({ modules, onModulePress }: Props) {
 		transform: [{ translateX: driftX.value }],
 	}));
 
-	// Convert percentage positions to absolute positions — centered both horizontally and vertically
-	const constellationWidth = SCREEN_WIDTH * 0.82;
-	const horizontalPad = (SCREEN_WIDTH - constellationWidth) / 2;
-	const usableHeight = SCREEN_HEIGHT - 200;
-	// yPct ranges from ~0.08 to ~0.68, so the constellation spans ~60% of usableHeight
-	// Center it vertically by computing the offset needed
+	// Convert percentage positions to absolute positions — centered in the container
+	const constellationWidth = containerWidth * 0.82;
+	const horizontalPad = (containerWidth - constellationWidth) / 2;
+
 	const minY = Math.min(...STAR_POSITIONS.map((p) => p.yPct));
 	const maxY = Math.max(...STAR_POSITIONS.map((p) => p.yPct));
-	const constellationSpan = (maxY - minY) * usableHeight;
-	const verticalPad = (usableHeight - constellationSpan) / 2 - minY * usableHeight;
+	const constellationSpan = (maxY - minY) * containerHeight;
+	const verticalPad = (containerHeight - constellationSpan) / 2 - minY * containerHeight;
+
 	const positions = useMemo(
 		() =>
 			STAR_POSITIONS.map((pos) => ({
 				x: horizontalPad + pos.xPct * constellationWidth,
-				y: verticalPad + pos.yPct * usableHeight,
+				y: verticalPad + pos.yPct * containerHeight,
 			})),
-		[],
+		[containerWidth, containerHeight],
 	);
 
 	return (
-		<View style={styles.container}>
-			{/* Twinkling background particles */}
+		<>
 			{particles.map((p, i) => (
 				<TwinklingStar key={`p-${i}`} particle={p} />
 			))}
 
-			{/* Drifting constellation */}
 			<Animated.View style={[styles.constellationContainer, driftStyle]}>
-				{/* Connection lines */}
 				{CONNECTIONS.map(([fromIdx, toIdx], i) => (
 					<ConstellationLine key={`line-${i}`} from={positions[fromIdx]} to={positions[toIdx]} />
 				))}
 
-				{/* Star icons */}
 				{modules.map((module, index) => {
 					if (index >= positions.length) return null;
 					return (
@@ -255,6 +259,31 @@ export default function ConstellationLayout({ modules, onModulePress }: Props) {
 					);
 				})}
 			</Animated.View>
+		</>
+	);
+}
+
+export default function ConstellationLayout({ modules, onModulePress }: Props) {
+	const [layout, setLayout] = useState<{ width: number; height: number } | null>(null);
+
+	const handleLayout = (e: LayoutChangeEvent) => {
+		const { width, height } = e.nativeEvent.layout;
+		setLayout({ width, height });
+	};
+
+	const layoutKey = layout ? `${Math.round(layout.width)}_${Math.round(layout.height)}` : "init";
+
+	return (
+		<View style={styles.container} onLayout={handleLayout}>
+			{layout && (
+				<ConstellationInner
+					key={layoutKey}
+					modules={modules}
+					onModulePress={onModulePress}
+					containerWidth={layout.width}
+					containerHeight={layout.height}
+				/>
+			)}
 		</View>
 	);
 }
