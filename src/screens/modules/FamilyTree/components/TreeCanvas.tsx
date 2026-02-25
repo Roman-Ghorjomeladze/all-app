@@ -12,6 +12,7 @@ type TreeCanvasProps = {
 	layout: TreeLayout;
 	onPersonPress: (id: number) => void;
 	onAddChild: (parentId: number) => void;
+	onAddPartner: (personId: number) => void;
 };
 
 export type TreeCanvasHandle = {
@@ -35,7 +36,7 @@ function useStyles(colors: Colors) {
 }
 
 const TreeCanvas = forwardRef<TreeCanvasHandle, TreeCanvasProps>(function TreeCanvas(
-	{ layout, onPersonPress, onAddChild },
+	{ layout, onPersonPress, onAddChild, onAddPartner },
 	ref,
 ) {
 	const colors = useColors();
@@ -168,6 +169,7 @@ const TreeCanvas = forwardRef<TreeCanvasHandle, TreeCanvasProps>(function TreeCa
 									node={node}
 									onPress={onPersonPress}
 									onAddChild={onAddChild}
+									onAddPartner={onAddPartner}
 								/>
 							))}
 						</Svg>

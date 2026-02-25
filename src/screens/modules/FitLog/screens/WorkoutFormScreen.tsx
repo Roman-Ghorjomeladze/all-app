@@ -222,7 +222,7 @@ export default function WorkoutFormScreen() {
 						{mode === "edit" ? t("fitEditWorkout") : t("fitNewWorkout")}
 					</Text>
 					<TouchableOpacity onPress={handleSave} activeOpacity={0.7}>
-						<Text style={styles.saveButton}>{t("fitSave")}</Text>
+						<Ionicons name="checkmark" size={28} color={colors.accent} />
 					</TouchableOpacity>
 				</View>
 

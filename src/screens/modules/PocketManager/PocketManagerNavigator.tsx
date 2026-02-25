@@ -2,6 +2,8 @@ import React, { useMemo } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Text, View, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { PocketManagerStackParamList, PocketManagerTabParamList } from "../../../types/navigation";
 import DashboardScreen from "./screens/DashboardScreen";
 import ExpenseListScreen from "./screens/ExpenseListScreen";
@@ -11,6 +13,7 @@ import ProjectFormScreen from "./screens/ProjectFormScreen";
 import ProjectDetailScreen from "./screens/ProjectDetailScreen";
 import { useColors, Colors } from "./theme";
 import { useLanguage } from "../../../i18n";
+import { useIconMode } from "../../../settings";
 
 const Stack = createNativeStackNavigator<PocketManagerStackParamList>();
 const Tab = createBottomTabNavigator<PocketManagerTabParamList>();
@@ -18,9 +21,22 @@ const Tab = createBottomTabNavigator<PocketManagerTabParamList>();
 type TabIconProps = {
 	focused: boolean;
 	icon: string;
+	ionicon?: keyof typeof Ionicons.glyphMap;
+	iconMode?: boolean;
+	color?: string;
 };
 
-function TabIcon({ focused, icon }: TabIconProps) {
+function TabIcon({ focused, icon, ionicon, iconMode, color }: TabIconProps) {
+	if (iconMode && ionicon) {
+		return (
+			<Ionicons
+				name={ionicon}
+				size={24}
+				color={color}
+				style={{ opacity: focused ? 1 : 0.6 }}
+			/>
+		);
+	}
 	return (
 		<View style={layoutStyles.iconContainer}>
 			<Text style={[layoutStyles.icon, focused && layoutStyles.iconFocused]}>{icon}</Text>
@@ -31,7 +47,9 @@ function TabIcon({ focused, icon }: TabIconProps) {
 function TabNavigator() {
 	const { t } = useLanguage();
 	const colors = useColors();
-	const styles = useStyles(colors);
+	const insets = useSafeAreaInsets();
+	const { iconMode } = useIconMode();
+	const styles = useStyles(colors, insets.bottom);
 
 	return (
 		<Tab.Navigator
@@ -41,6 +59,7 @@ function TabNavigator() {
 				headerShown: false,
 				tabBarStyle: styles.tabBar,
 				tabBarLabelStyle: layoutStyles.tabLabel,
+				tabBarShowLabel: !iconMode,
 			}}
 		>
 			<Tab.Screen
@@ -48,7 +67,7 @@ function TabNavigator() {
 				component={DashboardScreen}
 				options={{
 					tabBarLabel: t("pmDashboard"),
-					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon={"\u{1F4CA}"} />,
+					tabBarIcon: ({ focused, color }) => <TabIcon focused={focused} icon={"\u{1F4CA}"} ionicon="pie-chart-outline" iconMode={iconMode} color={color} />,
 				}}
 			/>
 			<Tab.Screen
@@ -56,7 +75,7 @@ function TabNavigator() {
 				component={ExpenseListScreen}
 				options={{
 					tabBarLabel: t("pmExpenses"),
-					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon={"\u{1F4B3}"} />,
+					tabBarIcon: ({ focused, color }) => <TabIcon focused={focused} icon={"\u{1F4B3}"} ionicon="card-outline" iconMode={iconMode} color={color} />,
 				}}
 			/>
 			<Tab.Screen
@@ -64,7 +83,7 @@ function TabNavigator() {
 				component={ProjectListScreen}
 				options={{
 					tabBarLabel: t("pmProjects"),
-					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon={"\u{1F4C1}"} />,
+					tabBarIcon: ({ focused, color }) => <TabIcon focused={focused} icon={"\u{1F4C1}"} ionicon="briefcase-outline" iconMode={iconMode} color={color} />,
 				}}
 			/>
 		</Tab.Navigator>
@@ -73,7 +92,7 @@ function TabNavigator() {
 
 export default function PocketManagerNavigator() {
 	return (
-		<Stack.Navigator screenOptions={{ headerShown: false }}>
+		<Stack.Navigator screenOptions={{ headerShown: false, gestureEnabled: true, fullScreenGestureEnabled: true, animation: "slide_from_right" }}>
 			<Stack.Screen name="PocketManagerTabs" component={TabNavigator} />
 			<Stack.Screen
 				name="PMExpenseForm"
@@ -93,7 +112,7 @@ export default function PocketManagerNavigator() {
 	);
 }
 
-function useStyles(colors: Colors) {
+function useStyles(colors: Colors, bottomInset: number) {
 	return useMemo(
 		() =>
 			StyleSheet.create({
@@ -102,10 +121,11 @@ function useStyles(colors: Colors) {
 					borderTopColor: colors.border,
 					borderTopWidth: 0.5,
 					paddingTop: 8,
-					height: 88,
+					paddingBottom: bottomInset > 0 ? bottomInset : 8,
+					height: 60 + (bottomInset > 0 ? bottomInset : 8),
 				},
 			}),
-		[colors]
+		[colors, bottomInset]
 	);
 }
 

@@ -27,6 +27,7 @@ type HomeColors = {
 	textSecondary: string;
 	moduleNameColor: string;
 	shadow: string;
+	border?: string;
 };
 
 type Props = {
@@ -140,8 +141,19 @@ function lightenColor(hex: string, amount: number): string {
 	return `rgb(${r},${g},${b})`;
 }
 
+// Detect if background is dark or light
+function isDarkBackground(bgColor: string): boolean {
+	const hex = bgColor.replace("#", "");
+	if (hex.length < 6) return true;
+	const r = parseInt(hex.substring(0, 2), 16);
+	const g = parseInt(hex.substring(2, 4), 16);
+	const b = parseInt(hex.substring(4, 6), 16);
+	const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+	return luminance < 0.5;
+}
+
 // Glowing hexagon border component
-function HexagonBorder({ vertices }: { vertices: { x: number; y: number }[] }) {
+function HexagonBorder({ vertices, isDark }: { vertices: { x: number; y: number }[]; isDark: boolean }) {
 	const glowPulse = useSharedValue(0);
 
 	React.useEffect(() => {
@@ -156,6 +168,10 @@ function HexagonBorder({ vertices }: { vertices: { x: number; y: number }[] }) {
 		opacity: 0.3 + glowPulse.value * 0.2,
 	}));
 
+	const edgeColor = isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)";
+	const glowColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.08)";
+	const glowShadowColor = isDark ? "#FFFFFF" : "#000000";
+
 	const lines = [];
 	for (let i = 0; i < 6; i++) {
 		const a = vertices[i];
@@ -166,17 +182,17 @@ function HexagonBorder({ vertices }: { vertices: { x: number; y: number }[] }) {
 		const angle = Math.atan2(dy, dx) * (180 / Math.PI);
 
 		lines.push(
-			<Animated.View
+			<View
 				key={`hex-edge-${i}`}
 				style={[
 					styles.hexEdge,
 					{
+						backgroundColor: edgeColor,
 						width: length,
 						left: a.x,
-						top: a.y,
+						top: a.y - 0.75,
 						transform: [{ rotate: `${angle}deg` }],
 					},
-					glowStyle,
 				]}
 			/>,
 		);
@@ -197,6 +213,8 @@ function HexagonBorder({ vertices }: { vertices: { x: number; y: number }[] }) {
 				style={[
 					styles.hexEdgeGlow,
 					{
+						backgroundColor: glowColor,
+						shadowColor: glowShadowColor,
 						width: length + 10,
 						left: a.x - 5,
 						top: a.y - 4,
@@ -471,7 +489,7 @@ function BubblesPhysics({
 
 	return (
 		<View style={[styles.container, { backgroundColor: colors.background }]}>
-			<HexagonBorder vertices={hex.vertices} />
+			<HexagonBorder vertices={hex.vertices} isDark={isDarkBackground(colors.background)} />
 			{modules.slice(0, count).map((module, index) => (
 				<Bubble
 					key={module.id}

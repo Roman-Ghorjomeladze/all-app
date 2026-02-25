@@ -201,7 +201,7 @@ export default function EventFormScreen() {
 					{isEdit ? t("bdEditEvent") : t("bdAddEvent")}
 				</Text>
 				<TouchableOpacity onPress={handleSave} activeOpacity={0.7}>
-					<Text style={styles.saveButton}>{t("bdSave")}</Text>
+					<Ionicons name="checkmark" size={28} color={colors.accent} />
 				</TouchableOpacity>
 			</View>
 

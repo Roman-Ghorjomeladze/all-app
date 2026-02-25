@@ -37,7 +37,7 @@ export type FamilyTreeStackParamList = {
 	FamilyTreeSelect: undefined;
 	FamilyTreeMain: { treeId: number };
 	FamilyTreePerson:
-		| { mode: "create"; treeId: number; parentId?: number }
+		| { mode: "create"; treeId: number; parentId?: number; spouseOfId?: number }
 		| { mode: "edit"; treeId: number; personId: number };
 	FamilyTreeList: { treeId: number };
 };

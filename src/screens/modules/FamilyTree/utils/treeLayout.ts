@@ -42,13 +42,13 @@ export type TreeLayout = {
 type AdjacencyData = {
 	childrenMap: Map<number, number[]>; // parentId → childIds
 	parentMap: Map<number, number[]>; // childId → parentIds
-	spouseMap: Map<number, number>; // personId → spouseId
+	spouseMap: Map<number, number[]>; // personId → spouseIds (supports multiple)
 };
 
 function buildAdjacency(relationships: Relationship[]): AdjacencyData {
 	const childrenMap = new Map<number, number[]>();
 	const parentMap = new Map<number, number[]>();
-	const spouseMap = new Map<number, number>();
+	const spouseMap = new Map<number, number[]>();
 
 	for (const rel of relationships) {
 		if (rel.relationship_type === "parent-child") {
@@ -60,8 +60,17 @@ function buildAdjacency(relationships: Relationship[]): AdjacencyData {
 			parents.push(rel.person1_id);
 			parentMap.set(rel.person2_id, parents);
 		} else if (rel.relationship_type === "spouse") {
-			spouseMap.set(rel.person1_id, rel.person2_id);
-			spouseMap.set(rel.person2_id, rel.person1_id);
+			const spouses1 = spouseMap.get(rel.person1_id) || [];
+			if (!spouses1.includes(rel.person2_id)) {
+				spouses1.push(rel.person2_id);
+				spouseMap.set(rel.person1_id, spouses1);
+			}
+
+			const spouses2 = spouseMap.get(rel.person2_id) || [];
+			if (!spouses2.includes(rel.person1_id)) {
+				spouses2.push(rel.person1_id);
+				spouseMap.set(rel.person2_id, spouses2);
+			}
 		}
 	}
 
@@ -73,14 +82,19 @@ function findRoots(persons: Person[], adjacency: AdjacencyData): number[] {
 	for (const person of persons) {
 		const parents = adjacency.parentMap.get(person.id);
 		if (!parents || parents.length === 0) {
-			const spouseId = adjacency.spouseMap.get(person.id);
-			if (spouseId !== undefined) {
+			// Check if any spouse has parents — if so, skip (they'll be added as a spouse unit)
+			const spouses = adjacency.spouseMap.get(person.id) || [];
+			let anySpouseHasParents = false;
+			for (const spouseId of spouses) {
 				const spouseParents = adjacency.parentMap.get(spouseId);
 				if (spouseParents && spouseParents.length > 0) {
-					continue;
+					anySpouseHasParents = true;
+					break;
 				}
 			}
-			roots.push(person.id);
+			if (!anySpouseHasParents) {
+				roots.push(person.id);
+			}
 		}
 	}
 
@@ -93,12 +107,12 @@ function findRoots(persons: Person[], adjacency: AdjacencyData): number[] {
 
 type GenerationUnit = {
 	primaryId: number;
-	spouseId?: number;
+	spouseIds: number[]; // supports multiple partners
 };
 
 /**
- * Get the unified set of children for a unit (person or couple).
- * Deduplicates children that appear under both parents.
+ * Get the unified set of children for a unit (person + all partners).
+ * Deduplicates children that appear under multiple parents.
  */
 function getUnitChildren(unit: GenerationUnit, adjacency: AdjacencyData): number[] {
 	const allChildIds: number[] = [];
@@ -110,8 +124,8 @@ function getUnitChildren(unit: GenerationUnit, adjacency: AdjacencyData): number
 			allChildIds.push(cid);
 		}
 	}
-	if (unit.spouseId !== undefined) {
-		const spouseChildren = adjacency.childrenMap.get(unit.spouseId) || [];
+	for (const spouseId of unit.spouseIds) {
+		const spouseChildren = adjacency.childrenMap.get(spouseId) || [];
 		for (const cid of spouseChildren) {
 			if (!seen.has(cid)) {
 				seen.add(cid);
@@ -140,11 +154,15 @@ export function computeLayout(persons: Person[], relationships: Relationship[]):
 	const visited = new Set<number>();
 	const queue: { id: number; gen: number }[] = [];
 
+	// Deduplicate roots: if a person and their spouse are both roots, keep only one
 	const rootSet = new Set(roots);
 	for (const rootId of roots) {
-		const spouseId = adjacency.spouseMap.get(rootId);
-		if (spouseId !== undefined && rootSet.has(spouseId)) {
-			rootSet.delete(spouseId);
+		if (!rootSet.has(rootId)) continue; // Already removed by a spouse — skip
+		const spouses = adjacency.spouseMap.get(rootId) || [];
+		for (const spouseId of spouses) {
+			if (rootSet.has(spouseId)) {
+				rootSet.delete(spouseId);
+			}
 		}
 	}
 
@@ -153,10 +171,12 @@ export function computeLayout(persons: Person[], relationships: Relationship[]):
 			queue.push({ id: rootId, gen: 0 });
 			visited.add(rootId);
 
-			const spouseId = adjacency.spouseMap.get(rootId);
-			if (spouseId !== undefined && !visited.has(spouseId)) {
-				queue.push({ id: spouseId, gen: 0 });
-				visited.add(spouseId);
+			const spouses = adjacency.spouseMap.get(rootId) || [];
+			for (const spouseId of spouses) {
+				if (!visited.has(spouseId)) {
+					queue.push({ id: spouseId, gen: 0 });
+					visited.add(spouseId);
+				}
 			}
 		}
 	}
@@ -171,10 +191,12 @@ export function computeLayout(persons: Person[], relationships: Relationship[]):
 				visited.add(childId);
 				queue.push({ id: childId, gen: gen + 1 });
 
-				const childSpouse = adjacency.spouseMap.get(childId);
-				if (childSpouse !== undefined && !visited.has(childSpouse)) {
-					visited.add(childSpouse);
-					queue.push({ id: childSpouse, gen: gen + 1 });
+				const childSpouses = adjacency.spouseMap.get(childId) || [];
+				for (const childSpouse of childSpouses) {
+					if (!visited.has(childSpouse)) {
+						visited.add(childSpouse);
+						queue.push({ id: childSpouse, gen: gen + 1 });
+					}
 				}
 			}
 		}
@@ -187,11 +209,7 @@ export function computeLayout(persons: Person[], relationships: Relationship[]):
 		}
 	}
 
-	// ── Group by generation → units (person or couple) ──
-	// Use a recursive DFS ordering: for each unit, first place its children
-	// (in order), which ensures siblings from the same parent are adjacent
-	// and the child order matches the parent's left-to-right order.
-
+	// ── Group by generation → units (person + partners) ──
 	const genGroups = new Map<number, GenerationUnit[]>();
 	const processedInUnit = new Set<number>();
 
@@ -206,8 +224,6 @@ export function computeLayout(persons: Person[], relationships: Relationship[]):
 
 	/**
 	 * Recursively place a unit and all its descendants in DFS order.
-	 * This ensures that at every generation level, children of the same
-	 * parent are adjacent, and the order follows the tree structure.
 	 */
 	function placeUnitAndDescendants(personId: number) {
 		if (processedInUnit.has(personId)) return;
@@ -215,17 +231,18 @@ export function computeLayout(persons: Person[], relationships: Relationship[]):
 		const gen = generationOf.get(personId) ?? 0;
 		const units = getOrCreateGenUnits(gen);
 
-		const spouseId = adjacency.spouseMap.get(personId);
-		let unit: GenerationUnit;
-		if (spouseId !== undefined && generationOf.get(spouseId) === gen && !processedInUnit.has(spouseId)) {
-			unit = { primaryId: personId, spouseId };
-			processedInUnit.add(personId);
-			processedInUnit.add(spouseId);
-		} else {
-			unit = { primaryId: personId };
-			processedInUnit.add(personId);
+		// Find all available spouses at the same generation
+		const allSpouses = adjacency.spouseMap.get(personId) || [];
+		const availableSpouses = allSpouses.filter(
+			(sid) => generationOf.get(sid) === gen && !processedInUnit.has(sid),
+		);
+
+		processedInUnit.add(personId);
+		for (const sid of availableSpouses) {
+			processedInUnit.add(sid);
 		}
 
+		const unit: GenerationUnit = { primaryId: personId, spouseIds: availableSpouses };
 		units.push(unit);
 
 		// Now recursively place children
@@ -256,9 +273,6 @@ export function computeLayout(persons: Person[], relationships: Relationship[]):
 	}
 
 	// ── Position nodes using recursive subtree layout ──
-	// Each unit is treated as a subtree: we compute the subtree width
-	// bottom-up, then position children left-to-right within the
-	// parent's allocated space, and center the parent above them.
 	const positions = new Map<number, { x: number; y: number }>();
 	const generations = [...genGroups.keys()].sort((a, b) => a - b);
 
@@ -268,17 +282,17 @@ export function computeLayout(persons: Person[], relationships: Relationship[]):
 		const units = genGroups.get(gen)!;
 		for (const unit of units) {
 			unitOfPerson.set(unit.primaryId, unit);
-			if (unit.spouseId !== undefined) {
-				unitOfPerson.set(unit.spouseId, unit);
+			for (const spouseId of unit.spouseIds) {
+				unitOfPerson.set(spouseId, unit);
 			}
 		}
 	}
 
 	/** Width of just the unit node(s), without children. */
 	function unitWidth(unit: GenerationUnit): number {
-		return unit.spouseId !== undefined
-			? NODE_WIDTH * 2 + SPOUSE_GAP
-			: NODE_WIDTH;
+		const nodeCount = 1 + unit.spouseIds.length;
+		if (nodeCount === 1) return NODE_WIDTH;
+		return NODE_WIDTH * nodeCount + SPOUSE_GAP * (nodeCount - 1);
 	}
 
 	/** Cache for subtree widths. Key = "primaryId" */
@@ -321,10 +335,6 @@ export function computeLayout(persons: Person[], relationships: Relationship[]):
 
 	/**
 	 * Recursively position a unit and all descendants.
-	 * The unit's subtree is allocated the horizontal band [left, left + allocatedWidth].
-	 * The unit is centered within that band.
-	 * Children are positioned left-to-right within the band, each getting
-	 * their own subtree width as allocation.
 	 */
 	function positionSubtree(unit: GenerationUnit, left: number, gen: number) {
 		const y = CANVAS_PADDING + gen * (NODE_HEIGHT + V_GAP);
@@ -336,8 +346,10 @@ export function computeLayout(persons: Person[], relationships: Relationship[]):
 			// Leaf unit: center within allocated space
 			const startX = left + (allocated - selfW) / 2;
 			positions.set(unit.primaryId, { x: startX, y });
-			if (unit.spouseId !== undefined) {
-				positions.set(unit.spouseId, { x: startX + NODE_WIDTH + SPOUSE_GAP, y });
+			let offset = NODE_WIDTH + SPOUSE_GAP;
+			for (const spouseId of unit.spouseIds) {
+				positions.set(spouseId, { x: startX + offset, y });
+				offset += NODE_WIDTH + SPOUSE_GAP;
 			}
 			return;
 		}
@@ -348,7 +360,7 @@ export function computeLayout(persons: Person[], relationships: Relationship[]):
 		for (let i = 0; i < childIds.length; i++) {
 			const childUnit = unitOfPerson.get(childIds[i]);
 			const cw = childUnit ? subtreeWidth(childUnit) : NODE_WIDTH;
-			childAllocations.push({ unit: childUnit ?? { primaryId: childIds[i] }, width: cw });
+			childAllocations.push({ unit: childUnit ?? { primaryId: childIds[i], spouseIds: [] }, width: cw });
 			childrenTotalWidth += cw;
 			if (i < childIds.length - 1) {
 				childrenTotalWidth += H_GAP;
@@ -367,20 +379,22 @@ export function computeLayout(persons: Person[], relationships: Relationship[]):
 		}
 
 		// Center parent above children span
-		// Find actual leftmost and rightmost child positions
 		let minChildX = Infinity;
 		let maxChildX = -Infinity;
 		for (const childId of childIds) {
 			const cp = positions.get(childId);
 			if (cp) {
 				minChildX = Math.min(minChildX, cp.x);
-				const childSpouse = adjacency.spouseMap.get(childId);
-				const csp = childSpouse ? positions.get(childSpouse) : undefined;
-				if (csp) {
-					maxChildX = Math.max(maxChildX, csp.x + NODE_WIDTH);
-				} else {
-					maxChildX = Math.max(maxChildX, cp.x + NODE_WIDTH);
+				// Find rightmost position considering child's spouses
+				let rightMost = cp.x + NODE_WIDTH;
+				const childSpouses = adjacency.spouseMap.get(childId) || [];
+				for (const cspId of childSpouses) {
+					const csp = positions.get(cspId);
+					if (csp) {
+						rightMost = Math.max(rightMost, csp.x + NODE_WIDTH);
+					}
 				}
+				maxChildX = Math.max(maxChildX, rightMost);
 			}
 		}
 
@@ -388,8 +402,10 @@ export function computeLayout(persons: Person[], relationships: Relationship[]):
 		const parentStartX = childrenCenter - selfW / 2;
 
 		positions.set(unit.primaryId, { x: parentStartX, y });
-		if (unit.spouseId !== undefined) {
-			positions.set(unit.spouseId, { x: parentStartX + NODE_WIDTH + SPOUSE_GAP, y });
+		let offset = NODE_WIDTH + SPOUSE_GAP;
+		for (const spouseId of unit.spouseIds) {
+			positions.set(spouseId, { x: parentStartX + offset, y });
+			offset += NODE_WIDTH + SPOUSE_GAP;
 		}
 	}
 
@@ -434,28 +450,31 @@ export function computeLayout(persons: Person[], relationships: Relationship[]):
 
 	// ── Build spouse edges ──
 	const edges: LayoutEdge[] = [];
+	const processedSpouseEdges = new Set<string>();
+
 	for (const rel of relationships) {
+		if (rel.relationship_type !== "spouse") continue;
+
+		const edgeKey = `${Math.min(rel.person1_id, rel.person2_id)}-${Math.max(rel.person1_id, rel.person2_id)}`;
+		if (processedSpouseEdges.has(edgeKey)) continue;
+		processedSpouseEdges.add(edgeKey);
+
 		const pos1 = positions.get(rel.person1_id);
 		const pos2 = positions.get(rel.person2_id);
 		if (!pos1 || !pos2) continue;
 
-		if (rel.relationship_type === "spouse") {
-			const leftPerson = pos1.x < pos2.x ? pos1 : pos2;
-			const rightPerson = pos1.x < pos2.x ? pos2 : pos1;
+		const leftPerson = pos1.x < pos2.x ? pos1 : pos2;
+		const rightPerson = pos1.x < pos2.x ? pos2 : pos1;
 
-			edges.push({
-				id: `sp-${rel.id}`,
-				from: { x: leftPerson.x + NODE_WIDTH, y: leftPerson.y + NODE_HEIGHT / 2 },
-				to: { x: rightPerson.x, y: rightPerson.y + NODE_HEIGHT / 2 },
-				type: "spouse",
-			});
-		}
+		edges.push({
+			id: `sp-${rel.id}`,
+			from: { x: leftPerson.x + NODE_WIDTH, y: leftPerson.y + NODE_HEIGHT / 2 },
+			to: { x: rightPerson.x, y: rightPerson.y + NODE_HEIGHT / 2 },
+			type: "spouse",
+		});
 	}
 
 	// ── Build family edges: grouped parent-to-children connectors ──
-	// Each parent unit gets its own separate rail and child drops.
-	// Adjacent sibling families get staggered rail Y positions so their
-	// horizontal rails don't merge into one visual line.
 	const familyEdges: FamilyEdge[] = [];
 	const processedFamilies = new Set<string>();
 
@@ -466,17 +485,24 @@ export function computeLayout(persons: Person[], relationships: Relationship[]):
 			const allChildIds = getUnitChildren(unit, adjacency);
 			if (allChildIds.length === 0) continue;
 
-			const familyKey = unit.spouseId
-				? `fam-${Math.min(unit.primaryId, unit.spouseId)}-${Math.max(unit.primaryId, unit.spouseId)}`
-				: `fam-${unit.primaryId}`;
+			// Build a unique key for this family
+			const familyIds = [unit.primaryId, ...unit.spouseIds].sort((a, b) => a - b);
+			const familyKey = `fam-${familyIds.join("-")}`;
 			if (processedFamilies.has(familyKey)) continue;
 			processedFamilies.add(familyKey);
 
+			// Calculate the center point of the entire unit (primary + all spouses)
 			const primaryPos = positions.get(unit.primaryId)!;
 			let parentX: number;
-			if (unit.spouseId !== undefined) {
-				const spousePos = positions.get(unit.spouseId)!;
-				parentX = (primaryPos.x + spousePos.x + NODE_WIDTH) / 2;
+			if (unit.spouseIds.length > 0) {
+				const allPositions = [primaryPos];
+				for (const sid of unit.spouseIds) {
+					const spos = positions.get(sid);
+					if (spos) allPositions.push(spos);
+				}
+				const leftMost = Math.min(...allPositions.map((p) => p.x));
+				const rightMost = Math.max(...allPositions.map((p) => p.x)) + NODE_WIDTH;
+				parentX = (leftMost + rightMost) / 2;
 			} else {
 				parentX = primaryPos.x + NODE_WIDTH / 2;
 			}
@@ -496,9 +522,6 @@ export function computeLayout(persons: Person[], relationships: Relationship[]):
 
 			if (childPoints.length === 0) continue;
 
-			// Rail Y: midpoint between parent bottom and first child top,
-			// staggered by ±10px for even/odd sibling families so adjacent
-			// rails don't merge into one visual line.
 			const baseMidY = parentY + (childPoints[0].y - parentY) / 2;
 			const stagger = siblingIdx % 2 === 0 ? -8 : 8;
 			const railY = baseMidY + stagger;

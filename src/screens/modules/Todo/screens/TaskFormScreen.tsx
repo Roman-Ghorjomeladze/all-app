@@ -230,7 +230,7 @@ export default function TaskFormScreen() {
 					style={styles.headerBtn}
 					disabled={!canSave}
 				>
-					<Text style={[styles.saveText, !canSave && { opacity: 0.4 }]}>{t("tdSave")}</Text>
+					<Ionicons name="checkmark" size={28} color={!canSave ? colors.textSecondary : colors.accent} />
 				</TouchableOpacity>
 			</View>
 

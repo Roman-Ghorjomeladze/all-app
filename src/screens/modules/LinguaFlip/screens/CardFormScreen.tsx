@@ -12,6 +12,7 @@ import {
 	Platform,
 	Modal,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { LinguaFlipStackParamList } from "../../../../types/navigation";
 import { useColors, Colors, spacing } from "../theme";
@@ -324,7 +325,7 @@ export default function CardFormScreen({ navigation, route }: Props) {
 				{/* Header */}
 				<View style={styles.header}>
 					<TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
-						<Text style={styles.cancelText}>{t("cancel")}</Text>
+						<Ionicons name="close" size={28} color={colors.textPrimary} />
 					</TouchableOpacity>
 					<Text style={styles.headerTitle}>
 						{isEdit ? t("llEditCard") : t("llAddCard")}
@@ -334,9 +335,7 @@ export default function CardFormScreen({ navigation, route }: Props) {
 						onPress={handleSave}
 						disabled={!canSave}
 					>
-						<Text style={[styles.saveText, !canSave && { opacity: 0.4 }]}>
-							{t("save")}
-						</Text>
+						<Ionicons name="checkmark" size={28} color={!canSave ? colors.textSecondary : colors.accent} />
 					</TouchableOpacity>
 				</View>
 

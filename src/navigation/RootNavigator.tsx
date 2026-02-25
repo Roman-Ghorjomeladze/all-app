@@ -39,6 +39,9 @@ export default function RootNavigator() {
 				screenOptions={{
 					headerShown: true,
 					headerBackTitle: "Back",
+					gestureEnabled: true,
+					fullScreenGestureEnabled: true,
+					animation: "slide_from_right",
 				}}
 			>
 				<Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />

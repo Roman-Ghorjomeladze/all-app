@@ -7,11 +7,13 @@ type PersonNodeProps = {
 	node: LayoutNode;
 	onPress: (id: number) => void;
 	onAddChild: (id: number) => void;
+	onAddPartner: (id: number) => void;
 };
 
 const { ADD_CHILD_SIZE } = nodeLayout;
+const PARTNER_BTN_SIZE = 20;
 
-export default function PersonNode({ node, onPress, onAddChild }: PersonNodeProps) {
+export default function PersonNode({ node, onPress, onAddChild, onAddPartner }: PersonNodeProps) {
 	const colors = useColors();
 
 	const genderBorderColor: Record<string, string> = {
@@ -38,6 +40,10 @@ export default function PersonNode({ node, onPress, onAddChild }: PersonNodeProp
 	// Add child button position (bottom center of node)
 	const addBtnX = x + width / 2;
 	const addBtnY = y + height + 2;
+
+	// Add partner button position (right-center of node)
+	const partnerBtnX = x + width + 2 + PARTNER_BTN_SIZE / 2;
+	const partnerBtnY = y + height / 2;
 
 	return (
 		<G>
@@ -107,7 +113,7 @@ export default function PersonNode({ node, onPress, onAddChild }: PersonNodeProp
 				fill={colors.accent}
 				onPress={() => onAddChild(person.id)}
 			/>
-			{/* Plus sign on add button */}
+			{/* Plus sign on add child button */}
 			<Line
 				x1={addBtnX - 5}
 				y1={addBtnY + ADD_CHILD_SIZE / 2}
@@ -126,6 +132,26 @@ export default function PersonNode({ node, onPress, onAddChild }: PersonNodeProp
 				strokeWidth={2}
 				strokeLinecap="round"
 			/>
+
+			{/* Add partner button (right side of node) */}
+			<Circle
+				cx={partnerBtnX}
+				cy={partnerBtnY}
+				r={PARTNER_BTN_SIZE / 2}
+				fill={colors.spouse}
+				onPress={() => onAddPartner(person.id)}
+			/>
+			{/* Heart symbol on add partner button */}
+			<SvgText
+				x={partnerBtnX}
+				y={partnerBtnY + 4}
+				textAnchor="middle"
+				fontSize={11}
+				fill={colors.white}
+				onPress={() => onAddPartner(person.id)}
+			>
+				{"\u2661"}
+			</SvgText>
 		</G>
 	);
 }

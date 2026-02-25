@@ -116,6 +116,9 @@ export default function LinguaFlipNavigator() {
 			screenOptions={{
 				headerShown: false,
 				contentStyle: { backgroundColor: colors.background },
+				gestureEnabled: true,
+				fullScreenGestureEnabled: true,
+				animation: "slide_from_right",
 			}}
 		>
 			<Stack.Screen name="LLProjectSelect" component={ProjectSelectScreen} />

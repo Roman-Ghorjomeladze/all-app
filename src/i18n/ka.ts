@@ -9,6 +9,7 @@ export default {
 	homeLayoutBubbles: "ბუშტები",
 	homeLayoutOrbit: "ორბიტა",
 	homeLayoutConstellation: "ვარსკვლავები",
+	iconMode: "ჩანართები",
 
 	// Common
 	loading: "იტვირთება...",
@@ -146,9 +147,10 @@ export default {
 	ftModuleName: "საგვარეულო ხე",
 	ftTree: "ხე",
 	ftList: "სია",
-	ftAddPerson: "პიროვნების დამატება",
+	ftAddPerson: "დამატება",
 	ftAddChild: "შვილის დამატება",
-	ftEditPerson: "პიროვნების რედაქტირება",
+	ftAddPartner: "პარტნიორის დამატება",
+	ftEditPerson: "რედაქტირება",
 	ftFirstName: "სახელი",
 	ftLastName: "გვარი",
 	ftGender: "სქესი",
@@ -189,7 +191,7 @@ export default {
 	ftNoTrees: "საგვარეულო ხეები ჯერ არ არის",
 	ftNoTreesHint: "დააჭირეთ + ღილაკს პირველი საგვარეულო ხის შესაქმნელად",
 	ftRenameTree: "სახელის გადარქმევა",
-	ftTreeNamePlaceholder: "შეიყვანეთ საგვარეულო ხის სახელი...",
+	ftTreeNamePlaceholder: "შეიყვანეთ სახელი...",
 
 	// Flags Module
 	flModuleName: "დროშები",

@@ -202,7 +202,7 @@ export default function RecipeFormScreen() {
 					{isEdit ? t("mpEditRecipe") : t("mpNewRecipe")}
 				</Text>
 				<TouchableOpacity onPress={handleSave} activeOpacity={0.7} style={styles.saveButton}>
-					<Text style={styles.saveButtonText}>{t("mpSave")}</Text>
+					<Ionicons name="checkmark" size={28} color={colors.accent} />
 				</TouchableOpacity>
 			</View>
 

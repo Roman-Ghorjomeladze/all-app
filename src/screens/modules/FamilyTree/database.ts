@@ -210,17 +210,6 @@ export async function addRelationship(
 ): Promise<number> {
 	const database = await initDatabase();
 
-	// For spouse, check if either person already has a spouse
-	if (type === "spouse") {
-		const existingSpouse = await database.getFirstAsync<Relationship>(
-			"SELECT * FROM ft_relationships WHERE (person1_id = ? OR person2_id = ? OR person1_id = ? OR person2_id = ?) AND relationship_type = 'spouse'",
-			[person1Id, person1Id, person2Id, person2Id],
-		);
-		if (existingSpouse) {
-			throw new Error("One of the persons already has a spouse relationship");
-		}
-	}
-
 	// For parent-child, person1 = parent, person2 = child
 	const result = await database.runAsync(
 		"INSERT OR IGNORE INTO ft_relationships (person1_id, person2_id, relationship_type) VALUES (?, ?, ?)",
@@ -237,8 +226,10 @@ export async function removeRelationship(id: number): Promise<void> {
 export async function getAllRelationships(treeId: number): Promise<Relationship[]> {
 	const database = await initDatabase();
 	return database.getAllAsync<Relationship>(
-		"SELECT r.* FROM ft_relationships r INNER JOIN ft_persons p ON r.person1_id = p.id WHERE p.tree_id = ?",
-		[treeId],
+		`SELECT DISTINCT r.* FROM ft_relationships r
+		 WHERE r.person1_id IN (SELECT id FROM ft_persons WHERE tree_id = ?)
+		    OR r.person2_id IN (SELECT id FROM ft_persons WHERE tree_id = ?)`,
+		[treeId, treeId],
 	);
 }
 

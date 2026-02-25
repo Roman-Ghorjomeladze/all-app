@@ -2,6 +2,8 @@ import React, { useMemo } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Text, View, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { TodoStackParamList, TodoTabParamList } from "../../../types/navigation";
 import TaskListScreen from "./screens/TaskListScreen";
 import CategoryListScreen from "./screens/CategoryListScreen";
@@ -10,6 +12,7 @@ import TaskFormScreen from "./screens/TaskFormScreen";
 import CategoryFormScreen from "./screens/CategoryFormScreen";
 import { useColors, Colors } from "./theme";
 import { useLanguage } from "../../../i18n";
+import { useIconMode } from "../../../settings";
 
 const Stack = createNativeStackNavigator<TodoStackParamList>();
 const Tab = createBottomTabNavigator<TodoTabParamList>();
@@ -17,9 +20,22 @@ const Tab = createBottomTabNavigator<TodoTabParamList>();
 type TabIconProps = {
 	focused: boolean;
 	icon: string;
+	ionicon?: keyof typeof Ionicons.glyphMap;
+	iconMode?: boolean;
+	color?: string;
 };
 
-function TabIcon({ focused, icon }: TabIconProps) {
+function TabIcon({ focused, icon, ionicon, iconMode, color }: TabIconProps) {
+	if (iconMode && ionicon) {
+		return (
+			<Ionicons
+				name={ionicon}
+				size={24}
+				color={color}
+				style={{ opacity: focused ? 1 : 0.6 }}
+			/>
+		);
+	}
 	return (
 		<View style={layoutStyles.iconContainer}>
 			<Text style={[layoutStyles.icon, focused && layoutStyles.iconFocused]}>{icon}</Text>
@@ -30,7 +46,9 @@ function TabIcon({ focused, icon }: TabIconProps) {
 function TabNavigator() {
 	const { t } = useLanguage();
 	const colors = useColors();
-	const styles = useStyles(colors);
+	const insets = useSafeAreaInsets();
+	const { iconMode } = useIconMode();
+	const styles = useStyles(colors, insets.bottom);
 
 	return (
 		<Tab.Navigator
@@ -40,6 +58,7 @@ function TabNavigator() {
 				headerShown: false,
 				tabBarStyle: styles.tabBar,
 				tabBarLabelStyle: layoutStyles.tabLabel,
+				tabBarShowLabel: !iconMode,
 			}}
 		>
 			<Tab.Screen
@@ -47,7 +66,7 @@ function TabNavigator() {
 				component={TaskListScreen}
 				options={{
 					tabBarLabel: t("tdTasks"),
-					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon={"\u2705"} />,
+					tabBarIcon: ({ focused, color }) => <TabIcon focused={focused} icon={"\u2705"} ionicon="checkmark-done-outline" iconMode={iconMode} color={color} />,
 				}}
 			/>
 			<Tab.Screen
@@ -55,7 +74,7 @@ function TabNavigator() {
 				component={CategoryListScreen}
 				options={{
 					tabBarLabel: t("tdCategories"),
-					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon={"\u{1F4C1}"} />,
+					tabBarIcon: ({ focused, color }) => <TabIcon focused={focused} icon={"\u{1F4C1}"} ionicon="folder-outline" iconMode={iconMode} color={color} />,
 				}}
 			/>
 			<Tab.Screen
@@ -63,7 +82,7 @@ function TabNavigator() {
 				component={SearchScreen}
 				options={{
 					tabBarLabel: t("tdSearch"),
-					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon={"\u{1F50D}"} />,
+					tabBarIcon: ({ focused, color }) => <TabIcon focused={focused} icon={"\u{1F50D}"} ionicon="search-outline" iconMode={iconMode} color={color} />,
 				}}
 			/>
 		</Tab.Navigator>
@@ -72,7 +91,7 @@ function TabNavigator() {
 
 export default function TodoNavigator() {
 	return (
-		<Stack.Navigator screenOptions={{ headerShown: false }}>
+		<Stack.Navigator screenOptions={{ headerShown: false, gestureEnabled: true, fullScreenGestureEnabled: true, animation: "slide_from_right" }}>
 			<Stack.Screen name="TodoTabs" component={TabNavigator} />
 			<Stack.Screen
 				name="TodoTaskForm"
@@ -88,7 +107,7 @@ export default function TodoNavigator() {
 	);
 }
 
-function useStyles(colors: Colors) {
+function useStyles(colors: Colors, bottomInset: number) {
 	return useMemo(
 		() =>
 			StyleSheet.create({
@@ -97,10 +116,11 @@ function useStyles(colors: Colors) {
 					borderTopColor: colors.border,
 					borderTopWidth: 0.5,
 					paddingTop: 8,
-					height: 88,
+					paddingBottom: bottomInset > 0 ? bottomInset : 8,
+					height: 60 + (bottomInset > 0 ? bottomInset : 8),
 				},
 			}),
-		[colors]
+		[colors, bottomInset]
 	);
 }
 

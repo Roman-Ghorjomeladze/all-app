@@ -13,7 +13,7 @@ const LAYOUT_KEY = "@app_home_layout";
 const HomeLayoutContext = createContext<HomeLayoutContextType | undefined>(undefined);
 
 export function HomeLayoutProvider({ children }: { children: ReactNode }) {
-	const [layout, setLayoutState] = useState<HomeLayout>("bubbles");
+	const [layout, setLayoutState] = useState<HomeLayout>("constellation");
 	const [isLoaded, setIsLoaded] = useState(false);
 
 	useEffect(() => {

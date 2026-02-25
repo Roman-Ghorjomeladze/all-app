@@ -252,6 +252,10 @@ export default function TreeScreen({ navigation, route }: Props) {
 		navigation.navigate("FamilyTreePerson", { mode: "create", treeId, parentId });
 	};
 
+	const handleAddPartner = (personId: number) => {
+		navigation.navigate("FamilyTreePerson", { mode: "create", treeId, spouseOfId: personId });
+	};
+
 	const handleAddPerson = () => {
 		navigation.navigate("FamilyTreePerson", { mode: "create", treeId });
 	};
@@ -335,6 +339,7 @@ export default function TreeScreen({ navigation, route }: Props) {
 					layout={treeLayout}
 					onPersonPress={handlePersonPress}
 					onAddChild={handleAddChild}
+					onAddPartner={handleAddPartner}
 				/>
 			)}
 

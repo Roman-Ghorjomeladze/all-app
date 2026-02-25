@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
 import { useColors, Colors, spacing } from "../theme";
 import { useLanguage } from "../../../../i18n";
 
@@ -19,16 +19,16 @@ function useStyles(colors: Colors) {
 			color: colors.textSecondary,
 			marginBottom: spacing.sm,
 		},
-		optionsRow: {
+		scrollContent: {
 			flexDirection: "row",
 			gap: spacing.sm,
 		},
 		option: {
-			flex: 1,
 			flexDirection: "row",
 			alignItems: "center",
 			justifyContent: "center",
 			paddingVertical: 12,
+			paddingHorizontal: 18,
 			borderRadius: 12,
 			borderWidth: 1.5,
 			borderColor: colors.border,
@@ -60,7 +60,11 @@ export default function GenderPicker({ value, onChange }: GenderPickerProps) {
 	return (
 		<View style={styles.container}>
 			<Text style={styles.label}>{t("ftGender")}</Text>
-			<View style={styles.optionsRow}>
+			<ScrollView
+				horizontal
+				showsHorizontalScrollIndicator={false}
+				contentContainerStyle={styles.scrollContent}
+			>
 				{genderOptions.map((option) => {
 					const isSelected = value === option.key;
 					return (
@@ -80,7 +84,7 @@ export default function GenderPicker({ value, onChange }: GenderPickerProps) {
 						</TouchableOpacity>
 					);
 				})}
-			</View>
+			</ScrollView>
 		</View>
 	);
 }

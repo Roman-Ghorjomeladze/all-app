@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import {
 	View,
 	Text,
@@ -7,10 +8,10 @@ import {
 	ScrollView,
 	TouchableOpacity,
 	Alert,
-	SafeAreaView,
 	KeyboardAvoidingView,
 	Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { FamilyTreeStackParamList } from "../../../types/navigation";
 import { useColors, Colors, spacing } from "./theme";
@@ -24,6 +25,7 @@ import {
 	addRelationship,
 	removeRelationship,
 	getPersonRelationships,
+	getSpouse,
 	PersonRelationship,
 	Person,
 } from "./database";
@@ -185,6 +187,7 @@ export default function PersonScreen({ navigation, route }: Props) {
 	const treeId = params.treeId;
 	const personId = isEditMode ? params.personId : undefined;
 	const parentId = !isEditMode ? params.parentId : undefined;
+	const spouseOfId = !isEditMode ? (params as any).spouseOfId as number | undefined : undefined;
 
 	// Form state
 	const [firstName, setFirstName] = useState("");
@@ -264,8 +267,18 @@ export default function PersonScreen({ navigation, route }: Props) {
 				);
 
 				// If parentId is provided, auto-create parent-child relationship
+				// Also link to the other parent (spouse) if one exists
 				if (parentId) {
 					await addRelationship(parentId, newId, "parent-child");
+					const otherParent = await getSpouse(parentId);
+					if (otherParent) {
+						await addRelationship(otherParent.id, newId, "parent-child");
+					}
+				}
+
+				// If spouseOfId is provided, auto-create spouse relationship
+				if (spouseOfId) {
+					await addRelationship(spouseOfId, newId, "spouse");
 				}
 			}
 			navigation.goBack();
@@ -353,23 +366,22 @@ export default function PersonScreen({ navigation, route }: Props) {
 	};
 
 	return (
-		<SafeAreaView style={styles.safeArea}>
+		<SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
 			<KeyboardAvoidingView
 				style={styles.flex}
-				behavior={Platform.OS === "ios" ? "padding" : undefined}
+				behavior={Platform.OS === "ios" ? "padding" : "height"}
+				keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
 			>
 				{/* Header */}
 				<View style={styles.header}>
 					<TouchableOpacity onPress={() => navigation.goBack()}>
-						<Text style={styles.cancelText}>{t("cancel")}</Text>
+						<Ionicons name="close" size={28} color={colors.textPrimary} />
 					</TouchableOpacity>
 					<Text style={styles.headerTitle}>
 						{isEditMode ? t("ftEditPerson") : t("ftAddPerson")}
 					</Text>
 					<TouchableOpacity onPress={handleSave} disabled={saving}>
-						<Text style={[styles.saveText, saving && styles.savingText]}>
-							{saving ? t("saving") : t("save")}
-						</Text>
+						<Ionicons name="checkmark" size={28} color={saving ? colors.textSecondary : colors.accent} />
 					</TouchableOpacity>
 				</View>
 

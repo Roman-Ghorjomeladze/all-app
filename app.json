@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "all-app",
+    "name": "Pack & Track",
     "slug": "all-app",
     "version": "1.0.0",
     "orientation": "default",
@@ -24,8 +24,9 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1E1E2E"
       },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "edgeToEdgeEnabled": false,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.roma.all.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"

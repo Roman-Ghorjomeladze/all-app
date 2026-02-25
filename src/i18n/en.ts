@@ -9,6 +9,7 @@ export default {
 	homeLayoutBubbles: "Bubbles",
 	homeLayoutOrbit: "Orbit",
 	homeLayoutConstellation: "Stars",
+	iconMode: "Tabs",
 
 	// Common
 	loading: "Loading...",
@@ -146,9 +147,10 @@ export default {
 	ftModuleName: "Family Tree",
 	ftTree: "Tree",
 	ftList: "List",
-	ftAddPerson: "Add Person",
+	ftAddPerson: "Add",
 	ftAddChild: "Add Child",
-	ftEditPerson: "Edit Person",
+	ftAddPartner: "Add Partner",
+	ftEditPerson: "Edit",
 	ftFirstName: "First Name",
 	ftLastName: "Last Name",
 	ftGender: "Gender",
@@ -178,17 +180,19 @@ export default {
 	ftAsChild: "As Child",
 	ftAsSpouse: "As Spouse",
 	ftClearAllData: "Clear Family Tree",
-	ftClearAllDataWarning: "This will permanently delete all family members and relationships. This action cannot be undone.",
+	ftClearAllDataWarning:
+		"This will permanently delete all family members and relationships. This action cannot be undone.",
 	ftPersons: "{{count}} members",
 	ftMyTrees: "My Family Trees",
 	ftCreateTree: "Create Tree",
 	ftTreeName: "Tree Name",
 	ftDeleteTree: "Delete Tree",
-	ftDeleteTreeConfirm: "Are you sure you want to delete this tree? All family members and relationships in it will be permanently removed.",
+	ftDeleteTreeConfirm:
+		"Are you sure you want to delete this tree? All family members and relationships in it will be permanently removed.",
 	ftNoTrees: "No family trees yet",
 	ftNoTreesHint: "Tap the + button to create your first family tree",
 	ftRenameTree: "Rename Tree",
-	ftTreeNamePlaceholder: "Enter tree name...",
+	ftTreeNamePlaceholder: "Enter name...",
 
 	// Flags Module
 	flModuleName: "Flags",
@@ -225,7 +229,8 @@ export default {
 	llProjectName: "Project Name",
 	llProjectNamePlaceholder: "Enter project name...",
 	llDeleteProject: "Delete Project",
-	llDeleteProjectConfirm: "Are you sure you want to delete this project? All cards, tags, and history will be permanently removed.",
+	llDeleteProjectConfirm:
+		"Are you sure you want to delete this project? All cards, tags, and history will be permanently removed.",
 	llNoProjects: "No projects yet",
 	llNoProjectsHint: "Tap the + button to create your first project",
 	llRenameProject: "Rename Project",
@@ -446,7 +451,8 @@ export default {
 	pmArchiveConfirm: "Archive this project? You can restore it later.",
 	pmUnarchive: "Unarchive",
 	pmDeleteProject: "Delete Project",
-	pmDeleteProjectConfirm: "Are you sure you want to delete this project? All expenses and categories will be removed.",
+	pmDeleteProjectConfirm:
+		"Are you sure you want to delete this project? All expenses and categories will be removed.",
 	pmProjectCategories: "Project Categories",
 	pmAddCategory: "Add Category",
 	pmCategoryNamePlaceholder: "Category name...",

@@ -224,7 +224,7 @@ export default function ProjectFormScreen() {
 					{isEdit ? t("pmEditProject") : t("pmAddProject")}
 				</Text>
 				<TouchableOpacity onPress={handleSave} activeOpacity={0.7}>
-					<Text style={styles.saveButton}>{t("pmSave")}</Text>
+					<Ionicons name="checkmark" size={28} color={colors.accent} />
 				</TouchableOpacity>
 			</View>
 

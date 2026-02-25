@@ -6,7 +6,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
 import { useLanguage } from "../i18n";
 import { useThemeMode } from "../theme";
-import { useHomeLayout, HomeLayout } from "../settings";
+import { useHomeLayout, HomeLayout, useIconMode } from "../settings";
 import BubblesLayout from "./home/BubblesLayout";
 import OrbitLayout from "./home/OrbitLayout";
 import ConstellationLayout from "./home/ConstellationLayout";
@@ -73,6 +73,7 @@ export default function HomeScreen({ navigation }: Props) {
 	const { language, setLanguage, t } = useLanguage();
 	const { mode, toggleMode } = useThemeMode();
 	const { layout, setLayout } = useHomeLayout();
+	const { iconMode, toggleIconMode } = useIconMode();
 	const [settingsVisible, setSettingsVisible] = useState(false);
 	const homeColors = getHomeColors(mode);
 	const styles = useStyles(homeColors);
@@ -213,6 +214,31 @@ export default function HomeScreen({ navigation }: Props) {
 								))}
 							</View>
 						</View>
+
+						{/* Icon Mode Toggle */}
+						<View style={styles.settingRow}>
+							<Text style={styles.settingLabel}>{t("iconMode")}</Text>
+							<TouchableOpacity
+								style={styles.iconModeToggle}
+								onPress={toggleIconMode}
+								activeOpacity={0.7}
+							>
+								<View style={[styles.iconModeOption, !iconMode && styles.iconModeOptionActive]}>
+									<Ionicons
+										name="text"
+										size={18}
+										color={!iconMode ? homeColors.moduleNameColor : homeColors.textSecondary}
+									/>
+								</View>
+								<View style={[styles.iconModeOption, iconMode && styles.iconModeOptionActive]}>
+									<Ionicons
+										name="apps"
+										size={18}
+										color={iconMode ? homeColors.moduleNameColor : homeColors.textSecondary}
+									/>
+								</View>
+							</TouchableOpacity>
+						</View>
 					</View>
 				</TouchableOpacity>
 			</Modal>
@@ -329,6 +355,22 @@ function useStyles(c: HomeColors) {
 				},
 				layoutOptionIcon: {
 					fontSize: 18,
+				},
+				// Icon mode toggle
+				iconModeToggle: {
+					flexDirection: "row",
+					backgroundColor: c.background,
+					borderRadius: 20,
+					padding: 4,
+					minWidth: 115,
+				},
+				iconModeOption: {
+					paddingHorizontal: 14,
+					paddingVertical: 8,
+					borderRadius: 16,
+				},
+				iconModeOptionActive: {
+					backgroundColor: c.toggleActiveBg,
 				},
 			}),
 		[c],

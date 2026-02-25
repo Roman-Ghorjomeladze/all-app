@@ -2,9 +2,12 @@ import React, { useMemo } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Text, View, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { FitLogStackParamList, FitLogTabParamList } from "../../../types/navigation";
 import { useColors, Colors } from "./theme";
 import { useLanguage } from "../../../i18n";
+import { useIconMode } from "../../../settings";
 
 import WorkoutListScreen from "./screens/WorkoutListScreen";
 import HistoryScreen from "./screens/HistoryScreen";
@@ -21,9 +24,22 @@ const Tab = createBottomTabNavigator<FitLogTabParamList>();
 type TabIconProps = {
 	focused: boolean;
 	icon: string;
+	ionicon?: keyof typeof Ionicons.glyphMap;
+	iconMode?: boolean;
+	color?: string;
 };
 
-function TabIcon({ focused, icon }: TabIconProps) {
+function TabIcon({ focused, icon, ionicon, iconMode, color }: TabIconProps) {
+	if (iconMode && ionicon) {
+		return (
+			<Ionicons
+				name={ionicon}
+				size={24}
+				color={color}
+				style={{ opacity: focused ? 1 : 0.6 }}
+			/>
+		);
+	}
 	return (
 		<View style={layoutStyles.iconContainer}>
 			<Text style={[layoutStyles.icon, focused && layoutStyles.iconFocused]}>{icon}</Text>
@@ -34,7 +50,9 @@ function TabIcon({ focused, icon }: TabIconProps) {
 function TabNavigator() {
 	const { t } = useLanguage();
 	const colors = useColors();
-	const styles = useTabStyles(colors);
+	const insets = useSafeAreaInsets();
+	const { iconMode } = useIconMode();
+	const styles = useTabStyles(colors, insets.bottom);
 
 	return (
 		<Tab.Navigator
@@ -44,6 +62,7 @@ function TabNavigator() {
 				headerShown: false,
 				tabBarStyle: styles.tabBar,
 				tabBarLabelStyle: layoutStyles.tabLabel,
+				tabBarShowLabel: !iconMode,
 			}}
 		>
 			<Tab.Screen
@@ -51,7 +70,7 @@ function TabNavigator() {
 				component={WorkoutListScreen}
 				options={{
 					tabBarLabel: t("fitWorkouts"),
-					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon="🏋️" />,
+					tabBarIcon: ({ focused, color }) => <TabIcon focused={focused} icon="🏋️" ionicon="barbell-outline" iconMode={iconMode} color={color} />,
 				}}
 			/>
 			<Tab.Screen
@@ -59,7 +78,7 @@ function TabNavigator() {
 				component={HistoryScreen}
 				options={{
 					tabBarLabel: t("fitHistory"),
-					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon="📋" />,
+					tabBarIcon: ({ focused, color }) => <TabIcon focused={focused} icon="📋" ionicon="time-outline" iconMode={iconMode} color={color} />,
 				}}
 			/>
 			<Tab.Screen
@@ -67,7 +86,7 @@ function TabNavigator() {
 				component={StatsScreen}
 				options={{
 					tabBarLabel: t("fitStats"),
-					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon="📊" />,
+					tabBarIcon: ({ focused, color }) => <TabIcon focused={focused} icon="📊" ionicon="stats-chart-outline" iconMode={iconMode} color={color} />,
 				}}
 			/>
 			<Tab.Screen
@@ -75,7 +94,7 @@ function TabNavigator() {
 				component={SoundSettingsScreen}
 				options={{
 					tabBarLabel: t("fitSounds"),
-					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon="🔔" />,
+					tabBarIcon: ({ focused, color }) => <TabIcon focused={focused} icon="🔔" ionicon="volume-high-outline" iconMode={iconMode} color={color} />,
 				}}
 			/>
 		</Tab.Navigator>
@@ -84,7 +103,7 @@ function TabNavigator() {
 
 export default function FitLogNavigator() {
 	return (
-		<Stack.Navigator screenOptions={{ headerShown: false }}>
+		<Stack.Navigator screenOptions={{ headerShown: false, gestureEnabled: true, fullScreenGestureEnabled: true, animation: "slide_from_right" }}>
 			<Stack.Screen name="FitLogTabs" component={TabNavigator} />
 			<Stack.Screen
 				name="FLWorkoutForm"
@@ -110,7 +129,7 @@ export default function FitLogNavigator() {
 	);
 }
 
-function useTabStyles(colors: Colors) {
+function useTabStyles(colors: Colors, bottomInset: number) {
 	return useMemo(
 		() =>
 			StyleSheet.create({
@@ -119,10 +138,11 @@ function useTabStyles(colors: Colors) {
 					borderTopColor: colors.border,
 					borderTopWidth: 0.5,
 					paddingTop: 8,
-					height: 88,
+					paddingBottom: bottomInset > 0 ? bottomInset : 8,
+					height: 60 + (bottomInset > 0 ? bottomInset : 8),
 				},
 			}),
-		[colors]
+		[colors, bottomInset]
 	);
 }
 

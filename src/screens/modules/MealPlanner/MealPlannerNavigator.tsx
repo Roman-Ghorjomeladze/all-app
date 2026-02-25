@@ -2,6 +2,8 @@ import React, { useMemo } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Text, View, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { MealPlannerStackParamList, MealPlannerTabParamList } from "../../../types/navigation";
 import RecipeListScreen from "./screens/RecipeListScreen";
 import RecipeDetailScreen from "./screens/RecipeDetailScreen";
@@ -12,6 +14,7 @@ import RecipePickerScreen from "./screens/RecipePickerScreen";
 import CalorieBookScreen from "./screens/CalorieBookScreen";
 import { useColors, Colors } from "./theme";
 import { useLanguage } from "../../../i18n";
+import { useIconMode } from "../../../settings";
 
 const Stack = createNativeStackNavigator<MealPlannerStackParamList>();
 const Tab = createBottomTabNavigator<MealPlannerTabParamList>();
@@ -19,9 +22,22 @@ const Tab = createBottomTabNavigator<MealPlannerTabParamList>();
 type TabIconProps = {
 	focused: boolean;
 	icon: string;
+	ionicon?: keyof typeof Ionicons.glyphMap;
+	iconMode?: boolean;
+	color?: string;
 };
 
-function TabIcon({ focused, icon }: TabIconProps) {
+function TabIcon({ focused, icon, ionicon, iconMode, color }: TabIconProps) {
+	if (iconMode && ionicon) {
+		return (
+			<Ionicons
+				name={ionicon}
+				size={24}
+				color={color}
+				style={{ opacity: focused ? 1 : 0.6 }}
+			/>
+		);
+	}
 	return (
 		<View style={layoutStyles.iconContainer}>
 			<Text style={[layoutStyles.icon, focused && layoutStyles.iconFocused]}>{icon}</Text>
@@ -32,7 +48,9 @@ function TabIcon({ focused, icon }: TabIconProps) {
 function TabNavigator() {
 	const { t } = useLanguage();
 	const colors = useColors();
-	const styles = useStyles(colors);
+	const insets = useSafeAreaInsets();
+	const { iconMode } = useIconMode();
+	const styles = useStyles(colors, insets.bottom);
 
 	return (
 		<Tab.Navigator
@@ -42,6 +60,7 @@ function TabNavigator() {
 				headerShown: false,
 				tabBarStyle: styles.tabBar,
 				tabBarLabelStyle: layoutStyles.tabLabel,
+				tabBarShowLabel: !iconMode,
 			}}
 		>
 			<Tab.Screen
@@ -49,7 +68,7 @@ function TabNavigator() {
 				component={RecipeListScreen}
 				options={{
 					tabBarLabel: t("mpRecipes"),
-					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon={"\u{1F373}"} />,
+					tabBarIcon: ({ focused, color }) => <TabIcon focused={focused} icon={"\u{1F373}"} ionicon="restaurant-outline" iconMode={iconMode} color={color} />,
 				}}
 			/>
 			<Tab.Screen
@@ -57,7 +76,7 @@ function TabNavigator() {
 				component={MealPlanScreen}
 				options={{
 					tabBarLabel: t("mpMealPlan"),
-					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon={"\u{1F4C5}"} />,
+					tabBarIcon: ({ focused, color }) => <TabIcon focused={focused} icon={"\u{1F4C5}"} ionicon="calendar-outline" iconMode={iconMode} color={color} />,
 				}}
 			/>
 			<Tab.Screen
@@ -65,7 +84,7 @@ function TabNavigator() {
 				component={ShoppingListScreen}
 				options={{
 					tabBarLabel: t("mpShopping"),
-					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon={"\u{1F6D2}"} />,
+					tabBarIcon: ({ focused, color }) => <TabIcon focused={focused} icon={"\u{1F6D2}"} ionicon="cart-outline" iconMode={iconMode} color={color} />,
 				}}
 			/>
 			<Tab.Screen
@@ -73,7 +92,7 @@ function TabNavigator() {
 				component={CalorieBookScreen}
 				options={{
 					tabBarLabel: t("mpCalorieBook"),
-					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon={"\u{1F525}"} />,
+					tabBarIcon: ({ focused, color }) => <TabIcon focused={focused} icon={"\u{1F525}"} ionicon="flame-outline" iconMode={iconMode} color={color} />,
 				}}
 			/>
 		</Tab.Navigator>
@@ -82,7 +101,7 @@ function TabNavigator() {
 
 export default function MealPlannerNavigator() {
 	return (
-		<Stack.Navigator screenOptions={{ headerShown: false }}>
+		<Stack.Navigator screenOptions={{ headerShown: false, gestureEnabled: true, fullScreenGestureEnabled: true, animation: "slide_from_right" }}>
 			<Stack.Screen name="MealPlannerTabs" component={TabNavigator} />
 			<Stack.Screen name="MPRecipeDetail" component={RecipeDetailScreen} />
 			<Stack.Screen
@@ -99,7 +118,7 @@ export default function MealPlannerNavigator() {
 	);
 }
 
-function useStyles(colors: Colors) {
+function useStyles(colors: Colors, bottomInset: number) {
 	return useMemo(
 		() =>
 			StyleSheet.create({
@@ -108,10 +127,11 @@ function useStyles(colors: Colors) {
 					borderTopColor: colors.border,
 					borderTopWidth: 0.5,
 					paddingTop: 8,
-					height: 88,
+					paddingBottom: bottomInset > 0 ? bottomInset : 8,
+					height: 60 + (bottomInset > 0 ? bottomInset : 8),
 				},
 			}),
-		[colors]
+		[colors, bottomInset]
 	);
 }
 
