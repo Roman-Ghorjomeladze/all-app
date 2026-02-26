@@ -203,6 +203,7 @@ export default function PersonScreen({ navigation, route }: Props) {
 	const [allPersons, setAllPersons] = useState<Person[]>([]);
 	const [showRelPicker, setShowRelPicker] = useState(false);
 	const [saving, setSaving] = useState(false);
+	const [isBloodMember, setIsBloodMember] = useState(!spouseOfId);
 
 	const loadPerson = useCallback(async () => {
 		if (!isEditMode || !personId) return;
@@ -215,6 +216,7 @@ export default function PersonScreen({ navigation, route }: Props) {
 			setDeathDate(person.death_date);
 			setBio(person.bio || "");
 			setImageUrl(person.image_url || "");
+			setIsBloodMember(person.is_blood_member === 1);
 		}
 	}, [isEditMode, personId]);
 
@@ -264,6 +266,7 @@ export default function PersonScreen({ navigation, route }: Props) {
 					deathDate,
 					bio.trim() || null,
 					imageUrl.trim() || null,
+					!spouseOfId, // blood member if not added as spouse
 				);
 
 				// If parentId is provided, auto-create parent-child relationship
@@ -517,6 +520,7 @@ export default function PersonScreen({ navigation, route }: Props) {
 						currentPersonId={personId}
 						allPersons={allPersons}
 						existingRelationIds={existingRelationIds}
+						isBloodMember={isBloodMember}
 						onClose={() => setShowRelPicker(false)}
 						onSelect={handleAddRelationship}
 					/>

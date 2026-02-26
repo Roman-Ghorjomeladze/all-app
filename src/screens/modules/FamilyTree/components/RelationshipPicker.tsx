@@ -9,6 +9,7 @@ type RelationshipPickerProps = {
 	currentPersonId: number;
 	allPersons: Person[];
 	existingRelationIds: Set<number>;
+	isBloodMember: boolean;
 	onClose: () => void;
 	onSelect: (personId: number, type: "parent-child" | "spouse", role: "parent" | "child" | "spouse") => void;
 };
@@ -124,6 +125,7 @@ export default function RelationshipPicker({
 	currentPersonId,
 	allPersons,
 	existingRelationIds,
+	isBloodMember,
 	onClose,
 	onSelect,
 }: RelationshipPickerProps) {
@@ -231,14 +233,16 @@ export default function RelationshipPicker({
 						/>
 					) : (
 						<View style={styles.typeList}>
-							<TouchableOpacity
-								style={styles.typeRow}
-								onPress={() => handleTypeSelect("parent")}
-								activeOpacity={0.7}
-							>
-								<Text style={styles.typeEmoji}>{"\uD83D\uDC68\u200D\uD83D\uDC69"}</Text>
-								<Text style={styles.typeText}>{t("ftAsParent")}</Text>
-							</TouchableOpacity>
+							{isBloodMember && (
+								<TouchableOpacity
+									style={styles.typeRow}
+									onPress={() => handleTypeSelect("parent")}
+									activeOpacity={0.7}
+								>
+									<Text style={styles.typeEmoji}>{"\uD83D\uDC68\u200D\uD83D\uDC69"}</Text>
+									<Text style={styles.typeText}>{t("ftAsParent")}</Text>
+								</TouchableOpacity>
+							)}
 							<TouchableOpacity
 								style={styles.typeRow}
 								onPress={() => handleTypeSelect("child")}

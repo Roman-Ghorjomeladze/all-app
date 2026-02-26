@@ -24,6 +24,7 @@ export default function PersonNode({ node, onPress, onAddChild, onAddPartner }: 
 
 	const { person, x, y, width, height } = node;
 	const borderColor = genderBorderColor[person.gender] || colors.other;
+	const isBlood = person.is_blood_member === 1;
 
 	const fullName = person.first_name + (person.last_name ? ` ${person.last_name.charAt(0)}.` : "");
 	const displayName = fullName.length > 14 ? fullName.substring(0, 13) + "\u2026" : fullName;
@@ -133,25 +134,29 @@ export default function PersonNode({ node, onPress, onAddChild, onAddPartner }: 
 				strokeLinecap="round"
 			/>
 
-			{/* Add partner button (right side of node) */}
-			<Circle
-				cx={partnerBtnX}
-				cy={partnerBtnY}
-				r={PARTNER_BTN_SIZE / 2}
-				fill={colors.spouse}
-				onPress={() => onAddPartner(person.id)}
-			/>
-			{/* Heart symbol on add partner button */}
-			<SvgText
-				x={partnerBtnX}
-				y={partnerBtnY + 4}
-				textAnchor="middle"
-				fontSize={11}
-				fill={colors.white}
-				onPress={() => onAddPartner(person.id)}
-			>
-				{"\u2661"}
-			</SvgText>
+			{/* Add partner button (right side of node) — only for blood members */}
+			{isBlood && (
+				<>
+					<Circle
+						cx={partnerBtnX}
+						cy={partnerBtnY}
+						r={PARTNER_BTN_SIZE / 2}
+						fill={colors.spouse}
+						onPress={() => onAddPartner(person.id)}
+					/>
+					{/* Heart symbol on add partner button */}
+					<SvgText
+						x={partnerBtnX}
+						y={partnerBtnY + 4}
+						textAnchor="middle"
+						fontSize={11}
+						fill={colors.white}
+						onPress={() => onAddPartner(person.id)}
+					>
+						{"\u2661"}
+					</SvgText>
+				</>
+			)}
 		</G>
 	);
 }

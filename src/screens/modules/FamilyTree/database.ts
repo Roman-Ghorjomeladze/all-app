@@ -17,6 +17,7 @@ export type Person = {
 	bio: string | null;
 	image_url: string | null;
 	gender: "male" | "female" | "other";
+	is_blood_member: number; // 1 = blood relative, 0 = married-in
 	created_at: string;
 };
 
@@ -100,6 +101,13 @@ export async function initDatabase(): Promise<SQLite.SQLiteDatabase> {
 	// Create index on tree_id
 	await db.execAsync("CREATE INDEX IF NOT EXISTS idx_ft_persons_tree_id ON ft_persons(tree_id)");
 
+	// Migration: add is_blood_member column if it doesn't exist
+	const tableInfo2 = await db.getAllAsync<{ name: string }>("PRAGMA table_info(ft_persons)");
+	const hasBloodMember = tableInfo2.some((col) => col.name === "is_blood_member");
+	if (!hasBloodMember) {
+		await db.execAsync("ALTER TABLE ft_persons ADD COLUMN is_blood_member INTEGER NOT NULL DEFAULT 1");
+	}
+
 	return db;
 }
 
@@ -154,11 +162,12 @@ export async function createPerson(
 	deathDate?: string | null,
 	bio?: string | null,
 	imageUrl?: string | null,
+	isBloodMember: boolean = true,
 ): Promise<number> {
 	const database = await initDatabase();
 	const result = await database.runAsync(
-		"INSERT INTO ft_persons (tree_id, first_name, last_name, gender, birth_date, death_date, bio, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-		[treeId, firstName, lastName, gender, birthDate ?? null, deathDate ?? null, bio ?? null, imageUrl ?? null],
+		"INSERT INTO ft_persons (tree_id, first_name, last_name, gender, birth_date, death_date, bio, image_url, is_blood_member) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		[treeId, firstName, lastName, gender, birthDate ?? null, deathDate ?? null, bio ?? null, imageUrl ?? null, isBloodMember ? 1 : 0],
 	);
 	return result.lastInsertRowId;
 }
@@ -294,6 +303,7 @@ export async function getPersonRelationships(personId: number): Promise<PersonRe
 				bio: row.bio,
 				image_url: row.image_url,
 				gender: row.gender,
+				is_blood_member: (row as any).is_blood_member ?? 1,
 				created_at: row.created_at,
 			},
 			type: "parent",
@@ -320,6 +330,7 @@ export async function getPersonRelationships(personId: number): Promise<PersonRe
 				bio: row.bio,
 				image_url: row.image_url,
 				gender: row.gender,
+				is_blood_member: (row as any).is_blood_member ?? 1,
 				created_at: row.created_at,
 			},
 			type: "child",
@@ -346,6 +357,7 @@ export async function getPersonRelationships(personId: number): Promise<PersonRe
 				bio: row.bio,
 				image_url: row.image_url,
 				gender: row.gender,
+				is_blood_member: (row as any).is_blood_member ?? 1,
 				created_at: row.created_at,
 			},
 			type: "spouse",

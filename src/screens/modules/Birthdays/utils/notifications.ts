@@ -1,23 +1,41 @@
-import * as Notifications from "expo-notifications";
 import { BirthdayEvent, getAllEvents, updateNotificationIds } from "../database";
 
-// Configure notification behavior
-Notifications.setNotificationHandler({
-	handleNotification: async () => ({
-		shouldShowAlert: true,
-		shouldPlaySound: true,
-		shouldSetBadge: false,
-		shouldShowBanner: true,
-		shouldShowList: true,
-	}),
-});
+// Lazy-load expo-notifications to avoid Expo Go crash on import
+let Notifications: typeof import("expo-notifications") | null = null;
+let notificationsReady = false;
+
+async function getNotifications() {
+	if (!Notifications) {
+		try {
+			Notifications = await import("expo-notifications");
+			if (!notificationsReady) {
+				Notifications.setNotificationHandler({
+					handleNotification: async () => ({
+						shouldShowAlert: true,
+						shouldPlaySound: true,
+						shouldSetBadge: false,
+						shouldShowBanner: true,
+						shouldShowList: true,
+					}),
+				});
+				notificationsReady = true;
+			}
+		} catch {
+			return null;
+		}
+	}
+	return Notifications;
+}
 
 export async function requestNotificationPermissions(): Promise<boolean> {
-	const { status: existingStatus } = await Notifications.getPermissionsAsync();
+	const N = await getNotifications();
+	if (!N) return false;
+
+	const { status: existingStatus } = await N.getPermissionsAsync();
 	let finalStatus = existingStatus;
 
 	if (existingStatus !== "granted") {
-		const { status } = await Notifications.requestPermissionsAsync();
+		const { status } = await N.requestPermissionsAsync();
 		finalStatus = status;
 	}
 
@@ -55,6 +73,9 @@ function getAgeText(event: BirthdayEvent, date: Date): string {
 export async function scheduleEventNotifications(
 	event: BirthdayEvent
 ): Promise<{ onDayId: string | null; dayBeforeId: string | null }> {
+	const N = await getNotifications();
+	if (!N) return { onDayId: null, dayBeforeId: null };
+
 	let onDayId: string | null = null;
 	let dayBeforeId: string | null = null;
 
@@ -63,13 +84,13 @@ export async function scheduleEventNotifications(
 	const ageText = getAgeText(event, nextDate);
 
 	if (event.notification_type === "on_day" || event.notification_type === "both") {
-		onDayId = await Notifications.scheduleNotificationAsync({
+		onDayId = await N.scheduleNotificationAsync({
 			content: {
 				title: `${emoji} ${event.name}`,
 				body: `Today is ${event.name}'s ${event.event_type}${ageText}!`,
 			},
 			trigger: {
-				type: Notifications.SchedulableTriggerInputTypes.DATE,
+				type: N.SchedulableTriggerInputTypes.DATE,
 				date: nextDate,
 			},
 		});
@@ -79,13 +100,13 @@ export async function scheduleEventNotifications(
 		const dayBefore = new Date(nextDate);
 		dayBefore.setDate(dayBefore.getDate() - 1);
 
-		dayBeforeId = await Notifications.scheduleNotificationAsync({
+		dayBeforeId = await N.scheduleNotificationAsync({
 			content: {
 				title: `${emoji} ${event.name} - Tomorrow`,
 				body: `Tomorrow is ${event.name}'s ${event.event_type}${ageText}!`,
 			},
 			trigger: {
-				type: Notifications.SchedulableTriggerInputTypes.DATE,
+				type: N.SchedulableTriggerInputTypes.DATE,
 				date: dayBefore,
 			},
 		});
@@ -98,11 +119,14 @@ export async function cancelEventNotifications(
 	onDayId: string | null | undefined,
 	dayBeforeId: string | null | undefined
 ): Promise<void> {
+	const N = await getNotifications();
+	if (!N) return;
+
 	if (onDayId) {
-		await Notifications.cancelScheduledNotificationAsync(onDayId).catch(() => {});
+		await N.cancelScheduledNotificationAsync(onDayId).catch(() => {});
 	}
 	if (dayBeforeId) {
-		await Notifications.cancelScheduledNotificationAsync(dayBeforeId).catch(() => {});
+		await N.cancelScheduledNotificationAsync(dayBeforeId).catch(() => {});
 	}
 }
 
