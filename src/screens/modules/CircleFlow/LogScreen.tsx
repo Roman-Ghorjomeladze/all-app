@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import CalendarPicker from "../../../components/CalendarPicker";
 import SymptomChip from "./components/SymptomChip";
 import MoodSelector from "./components/MoodSelector";
 import { useColors, Colors, typography, spacing } from "./theme";
@@ -401,13 +402,17 @@ export default function LogScreen() {
 						</View>
 					</View>
 
-					{/* Android date picker renders inline */}
-					{Platform.OS === "android" && showDatePicker && (
-						<DateTimePicker
+					{/* Android date picker */}
+					{Platform.OS === "android" && (
+						<CalendarPicker
+							visible={showDatePicker}
 							value={currentDate}
-							mode="date"
-							display="default"
-							onChange={handleDatePickerChange}
+							onSelect={(selectedDate) => {
+								setCurrentDate(selectedDate);
+								setShowDatePicker(false);
+							}}
+							onCancel={() => setShowDatePicker(false)}
+							accentColor={colors.period}
 							maximumDate={new Date()}
 						/>
 					)}

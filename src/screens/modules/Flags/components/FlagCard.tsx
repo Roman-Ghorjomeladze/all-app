@@ -1,8 +1,9 @@
 import React, { useMemo } from "react";
-import { TouchableOpacity, Text, StyleSheet, Dimensions } from "react-native";
+import { TouchableOpacity, Text, View, StyleSheet, Dimensions } from "react-native";
 import { Country } from "../data/countries";
 import { useColors, Colors, spacing } from "../theme";
 import { useLanguage } from "../i18n";
+import CountryFlag from "./CountryFlag";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width * 0.75;
@@ -29,9 +30,10 @@ function useStyles(colors: Colors) {
 			shadowRadius: 10,
 			elevation: 6,
 		},
-		flag: {
-			fontSize: 80,
+		flagContainer: {
 			marginBottom: spacing.md,
+			borderRadius: 8,
+			overflow: "hidden",
 		},
 		name: {
 			fontSize: 20,
@@ -54,7 +56,9 @@ export default function FlagCard({ country, onPress }: Props) {
 			onPress={() => onPress(country)}
 			activeOpacity={0.85}
 		>
-			<Text style={styles.flag}>{country.flag}</Text>
+			<View style={styles.flagContainer}>
+				<CountryFlag code={country.code} width={120} />
+			</View>
 			<Text style={styles.name} numberOfLines={1}>
 				{country.name[language]}
 			</Text>

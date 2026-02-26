@@ -30,6 +30,7 @@ import {
 import { rescheduleEventNotifications, cancelEventNotifications, requestNotificationPermissions } from "../utils/notifications";
 import { useColors, Colors, spacing, typography } from "../theme";
 import { useLanguage } from "../../../../i18n";
+import CalendarPicker from "../../../../components/CalendarPicker";
 import EventTypeSelector from "../components/EventTypeSelector";
 
 type Nav = NativeStackNavigationProp<BirthdaysStackParamList>;
@@ -230,22 +231,33 @@ export default function EventFormScreen() {
 					<Ionicons name="calendar-outline" size={20} color={colors.accent} />
 					<Text style={styles.dateButtonText}>{formattedDate}</Text>
 				</TouchableOpacity>
-				{showDatePicker && (
+				{showDatePicker && Platform.OS === "ios" && (
 					<>
-						{Platform.OS === "ios" && (
-							<View style={styles.pickerContainer}>
-								<TouchableOpacity onPress={() => setShowDatePicker(false)} activeOpacity={0.7}>
-									<Text style={styles.pickerDone}>{t("done")}</Text>
-								</TouchableOpacity>
-							</View>
-						)}
+						<View style={styles.pickerContainer}>
+							<TouchableOpacity onPress={() => setShowDatePicker(false)} activeOpacity={0.7}>
+								<Text style={styles.pickerDone}>{t("done")}</Text>
+							</TouchableOpacity>
+						</View>
 						<DateTimePicker
 							value={dateForPicker}
 							mode="date"
-							display={Platform.OS === "ios" ? "spinner" : "default"}
+							display="spinner"
 							onChange={handleDateChange}
 						/>
 					</>
+				)}
+				{Platform.OS === "android" && (
+					<CalendarPicker
+						visible={showDatePicker}
+						value={dateForPicker}
+						onSelect={(date) => {
+							setEventMonth(date.getMonth() + 1);
+							setEventDay(date.getDate());
+							setShowDatePicker(false);
+						}}
+						onCancel={() => setShowDatePicker(false)}
+						accentColor={colors.accent}
+					/>
 				)}
 
 				{/* Year */}

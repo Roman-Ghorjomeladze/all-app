@@ -31,6 +31,7 @@ import {
 } from "../database";
 import { useColors, Colors, spacing, typography, CATEGORY_COLORS } from "../theme";
 import { useLanguage } from "../../../../i18n";
+import CalendarPicker from "../../../../components/CalendarPicker";
 import InlineCategoryEditor from "../components/InlineCategoryEditor";
 
 type Nav = NativeStackNavigationProp<PocketManagerStackParamList>;
@@ -271,22 +272,32 @@ export default function ProjectFormScreen() {
 						</TouchableOpacity>
 					)}
 				</TouchableOpacity>
-				{showStartPicker && (
+				{showStartPicker && Platform.OS === "ios" && (
 					<>
-						{Platform.OS === "ios" && (
-							<View style={styles.pickerContainer}>
-								<TouchableOpacity onPress={() => setShowStartPicker(false)} activeOpacity={0.7}>
-									<Text style={styles.pickerDone}>{t("done")}</Text>
-								</TouchableOpacity>
-							</View>
-						)}
+						<View style={styles.pickerContainer}>
+							<TouchableOpacity onPress={() => setShowStartPicker(false)} activeOpacity={0.7}>
+								<Text style={styles.pickerDone}>{t("done")}</Text>
+							</TouchableOpacity>
+						</View>
 						<DateTimePicker
 							value={startDate || new Date()}
 							mode="date"
-							display={Platform.OS === "ios" ? "spinner" : "default"}
+							display="spinner"
 							onChange={handleStartDateChange}
 						/>
 					</>
+				)}
+				{Platform.OS === "android" && (
+					<CalendarPicker
+						visible={showStartPicker}
+						value={startDate || new Date()}
+						onSelect={(selectedDate) => {
+							setStartDate(selectedDate);
+							setShowStartPicker(false);
+						}}
+						onCancel={() => setShowStartPicker(false)}
+						accentColor={colors.accent}
+					/>
 				)}
 
 				{/* End Date */}
@@ -307,22 +318,33 @@ export default function ProjectFormScreen() {
 						</TouchableOpacity>
 					)}
 				</TouchableOpacity>
-				{showEndPicker && (
+				{showEndPicker && Platform.OS === "ios" && (
 					<>
-						{Platform.OS === "ios" && (
-							<View style={styles.pickerContainer}>
-								<TouchableOpacity onPress={() => setShowEndPicker(false)} activeOpacity={0.7}>
-									<Text style={styles.pickerDone}>{t("done")}</Text>
-								</TouchableOpacity>
-							</View>
-						)}
+						<View style={styles.pickerContainer}>
+							<TouchableOpacity onPress={() => setShowEndPicker(false)} activeOpacity={0.7}>
+								<Text style={styles.pickerDone}>{t("done")}</Text>
+							</TouchableOpacity>
+						</View>
 						<DateTimePicker
 							value={endDate || new Date()}
 							mode="date"
-							display={Platform.OS === "ios" ? "spinner" : "default"}
+							display="spinner"
 							onChange={handleEndDateChange}
 						/>
 					</>
+				)}
+				{Platform.OS === "android" && (
+					<CalendarPicker
+						visible={showEndPicker}
+						value={endDate || new Date()}
+						onSelect={(selectedDate) => {
+							setEndDate(selectedDate);
+							setShowEndPicker(false);
+						}}
+						onCancel={() => setShowEndPicker(false)}
+						accentColor={colors.accent}
+						minimumDate={startDate || undefined}
+					/>
 				)}
 
 				{/* Categories */}

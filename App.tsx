@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { Platform } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import * as NavigationBar from "expo-navigation-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ThemeProvider, useThemeMode } from "./src/theme";
 import { LanguageProvider } from "./src/i18n";
@@ -13,8 +12,10 @@ function AppContent() {
 
 	useEffect(() => {
 		if (Platform.OS === "android") {
-			NavigationBar.setBackgroundColorAsync(mode === "dark" ? "#2A273F" : "#FFFFFF");
-			NavigationBar.setButtonStyleAsync(mode === "dark" ? "light" : "dark");
+			import("expo-navigation-bar").then((NavigationBar) => {
+				NavigationBar.setBackgroundColorAsync(mode === "dark" ? "#1E1E2E" : "#F2F2F7");
+				NavigationBar.setButtonStyleAsync(mode === "dark" ? "light" : "dark");
+			}).catch(() => {});
 		}
 	}, [mode]);
 

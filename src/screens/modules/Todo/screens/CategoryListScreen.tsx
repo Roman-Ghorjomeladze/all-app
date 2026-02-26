@@ -77,7 +77,7 @@ export default function CategoryListScreen() {
 
 			{categories.length === 0 ? (
 				<View style={styles.emptyContainer}>
-					<Text style={styles.emptyEmoji}>{"\u{1F4C1}"}</Text>
+					<Ionicons name="grid-outline" size={56} color={colors.textSecondary} style={styles.emptyIcon} />
 					<Text style={styles.emptyText}>{t("tdNoCategories")}</Text>
 					<Text style={styles.emptyHint}>{t("tdNoCategoriesHint")}</Text>
 				</View>
@@ -133,9 +133,9 @@ function useStyles(colors: Colors) {
 					alignItems: "center",
 					paddingHorizontal: spacing.xl,
 				},
-				emptyEmoji: {
-					fontSize: 64,
+				emptyIcon: {
 					marginBottom: spacing.md,
+					opacity: 0.5,
 				},
 				emptyText: {
 					...typography.body,

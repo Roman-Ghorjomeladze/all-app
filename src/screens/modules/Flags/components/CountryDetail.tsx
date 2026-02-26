@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Country } from "../data/countries";
 import { useColors, Colors, spacing } from "../theme";
 import { useLanguage } from "../i18n";
+import CountryFlag from "./CountryFlag";
 
 type Props = {
 	country: Country;
@@ -61,10 +62,11 @@ function useStyles(colors: Colors) {
 			color: colors.textSecondary,
 			fontWeight: "600",
 		},
-		flag: {
-			fontSize: 100,
+		flagContainer: {
 			marginTop: spacing.sm,
 			marginBottom: spacing.md,
+			borderRadius: 8,
+			overflow: "hidden",
 		},
 		name: {
 			fontSize: 24,
@@ -120,7 +122,9 @@ export default function CountryDetail({ country, onClose }: Props) {
 				<Text style={styles.closeText}>✕</Text>
 			</TouchableOpacity>
 
-			<Text style={styles.flag}>{country.flag}</Text>
+			<View style={styles.flagContainer}>
+				<CountryFlag code={country.code} width={150} />
+			</View>
 			<Text style={styles.name}>{country.name[language]}</Text>
 			<Text style={styles.continent}>
 				{continentEmoji[country.continent] || "\u{1F30D}"} {country.continent}

@@ -7,6 +7,7 @@ import { countries, Country } from "../data/countries";
 import { useColors, Colors, spacing } from "../theme";
 import { useLanguage } from "../i18n";
 import QuizOption from "../components/QuizOption";
+import CountryFlag from "../components/CountryFlag";
 
 type Props = NativeStackScreenProps<FlagsQuizStackParamList, "FlagsQuizPlay">;
 
@@ -77,7 +78,8 @@ function useStyles(colors: Colors) {
 			alignItems: "center",
 		},
 		flag: {
-			fontSize: 120,
+			borderRadius: 10,
+			overflow: "hidden",
 		},
 		feedbackText: {
 			fontSize: 22,
@@ -169,7 +171,9 @@ export default function QuizPlayScreen({ navigation, route }: Props) {
 
 				{/* Flag */}
 				<View style={styles.flagContainer}>
-					<Text style={styles.flag}>{currentQuestion.country.flag}</Text>
+					<View style={styles.flag}>
+						<CountryFlag code={currentQuestion.country.code} width={200} />
+					</View>
 					{answered && (
 						<Text
 							style={[

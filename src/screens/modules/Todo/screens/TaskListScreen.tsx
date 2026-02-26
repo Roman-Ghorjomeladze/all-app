@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { View, Text, FlatList, StyleSheet, KeyboardAvoidingView, Platform, Alert } from "react-native";
+import { View, Text, FlatList, StyleSheet, KeyboardAvoidingView, Platform, Alert, Keyboard, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native";
@@ -39,7 +39,7 @@ const EMPTY_I18N: Record<SmartFilter, string> = {
 };
 
 const EMPTY_EMOJI: Record<SmartFilter, string> = {
-	all: "\u{2705}",
+	all: "\u{1F343}",
 	today: "\u{2600}\u{FE0F}",
 	upcoming: "\u{1F4C5}",
 	overdue: "\u{1F389}",
@@ -286,43 +286,46 @@ export default function TaskListScreen() {
 				behavior={Platform.OS === "ios" ? "padding" : undefined}
 				keyboardVerticalOffset={0}
 			>
-				{/* Header */}
-				{selectionMode ? renderSelectionHeader() : renderNormalHeader()}
+				<Pressable style={styles.flex} onPress={Keyboard.dismiss}>
+					{/* Header */}
+					{selectionMode ? renderSelectionHeader() : renderNormalHeader()}
 
-				{/* Smart Filters */}
-				<SmartFilterBar active={filter} counts={counts} onChange={setFilter} />
+					{/* Smart Filters */}
+					<SmartFilterBar active={filter} counts={counts} onChange={setFilter} />
 
-				{/* Sort */}
-				<SortButton current={sort} onChange={setSort} />
+					{/* Sort */}
+					<SortButton current={sort} onChange={setSort} />
 
-				{/* Task List */}
-				{tasks.length === 0 ? (
-					<View style={styles.emptyContainer}>
-						<Text style={styles.emptyEmoji}>{EMPTY_EMOJI[filter]}</Text>
-						<Text style={styles.emptyText}>{t(EMPTY_I18N[filter])}</Text>
-						{filter === "all" && (
-							<Text style={styles.emptyHint}>{t("tdNoTasksHint")}</Text>
-						)}
-					</View>
-				) : (
-					<FlatList
-						data={tasks}
-						keyExtractor={(item) => item.id.toString()}
-						renderItem={({ item }) => (
-							<TaskListItem
-								task={item}
-								onPress={handlePress}
-								onToggleComplete={handleToggleComplete}
-								onDelete={handleDelete}
-								selectionMode={selectionMode}
-								isSelected={selectedIds.has(item.id)}
-								onToggleSelect={handleToggleSelect}
-							/>
-						)}
-						contentContainerStyle={styles.listContent}
-						keyboardShouldPersistTaps="handled"
-					/>
-				)}
+					{/* Task List */}
+					{tasks.length === 0 ? (
+						<View style={styles.emptyContainer}>
+							<Text style={styles.emptyEmoji}>{EMPTY_EMOJI[filter]}</Text>
+							<Text style={styles.emptyText}>{t(EMPTY_I18N[filter])}</Text>
+							{filter === "all" && (
+								<Text style={styles.emptyHint}>{t("tdNoTasksHint")}</Text>
+							)}
+						</View>
+					) : (
+						<FlatList
+							data={tasks}
+							keyExtractor={(item) => item.id.toString()}
+							renderItem={({ item }) => (
+								<TaskListItem
+									task={item}
+									onPress={handlePress}
+									onToggleComplete={handleToggleComplete}
+									onDelete={handleDelete}
+									selectionMode={selectionMode}
+									isSelected={selectedIds.has(item.id)}
+									onToggleSelect={handleToggleSelect}
+								/>
+							)}
+							contentContainerStyle={styles.listContent}
+							keyboardShouldPersistTaps="handled"
+							keyboardDismissMode="on-drag"
+						/>
+					)}
+				</Pressable>
 
 				{/* Quick Add */}
 				{!selectionMode && <QuickAddBar onAdd={handleQuickAdd} />}

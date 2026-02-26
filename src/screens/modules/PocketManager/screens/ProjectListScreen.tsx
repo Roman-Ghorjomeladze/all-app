@@ -57,7 +57,7 @@ export default function ProjectListScreen() {
 				))
 			) : (
 				<View style={styles.emptyContainer}>
-					<Text style={styles.emptyEmoji}>{"\u{1F4C1}"}</Text>
+					<Ionicons name="folder-outline" size={56} color={colors.textSecondary} style={styles.emptyIcon} />
 					<Text style={styles.emptyText}>{t("pmNoProjects")}</Text>
 					<Text style={styles.emptyHint}>{t("pmNoProjectsHint")}</Text>
 				</View>
@@ -144,9 +144,9 @@ function useStyles(colors: Colors) {
 					paddingTop: spacing.xl * 3,
 					paddingHorizontal: spacing.xl,
 				},
-				emptyEmoji: {
-					fontSize: 64,
+				emptyIcon: {
 					marginBottom: spacing.md,
+					opacity: 0.5,
 				},
 				emptyText: {
 					...typography.body,

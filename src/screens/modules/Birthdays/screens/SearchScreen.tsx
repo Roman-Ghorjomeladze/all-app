@@ -244,7 +244,7 @@ export default function SearchScreen() {
 			{/* Results */}
 			{filteredEvents.length === 0 ? (
 				<View style={styles.emptyContainer}>
-					<Text style={styles.emptyEmoji}>{"\u{1F50D}"}</Text>
+					<Ionicons name="search-outline" size={56} color={colors.textSecondary} style={styles.emptyIcon} />
 					<Text style={styles.emptyText}>{t("bdNoResults")}</Text>
 				</View>
 			) : (
@@ -341,9 +341,9 @@ function useStyles(colors: Colors) {
 					alignItems: "center",
 					paddingHorizontal: spacing.xl,
 				},
-				emptyEmoji: {
-					fontSize: 64,
+				emptyIcon: {
 					marginBottom: spacing.md,
+					opacity: 0.5,
 				},
 				emptyText: {
 					...typography.body,

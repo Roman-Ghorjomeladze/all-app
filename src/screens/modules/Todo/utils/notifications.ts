@@ -1,20 +1,39 @@
-import * as Notifications from "expo-notifications";
 import { Task, getTasksForSmartList, updateTaskNotificationIds } from "../database";
 
-Notifications.setNotificationHandler({
-	handleNotification: async () => ({
-		shouldShowAlert: true,
-		shouldPlaySound: true,
-		shouldSetBadge: false,
-		shouldShowBanner: true,
-		shouldShowList: true,
-	}),
-});
+// Lazy-load expo-notifications to avoid crash on import
+let Notifications: typeof import("expo-notifications") | null = null;
+let notificationsReady = false;
+
+async function getNotifications() {
+	if (!Notifications) {
+		try {
+			Notifications = await import("expo-notifications");
+			if (!notificationsReady) {
+				Notifications.setNotificationHandler({
+					handleNotification: async () => ({
+						shouldShowAlert: true,
+						shouldPlaySound: true,
+						shouldSetBadge: false,
+						shouldShowBanner: true,
+						shouldShowList: true,
+					}),
+				});
+				notificationsReady = true;
+			}
+		} catch {
+			return null;
+		}
+	}
+	return Notifications;
+}
 
 export async function requestNotificationPermissions(): Promise<boolean> {
-	const { status: existingStatus } = await Notifications.getPermissionsAsync();
+	const N = await getNotifications();
+	if (!N) return false;
+
+	const { status: existingStatus } = await N.getPermissionsAsync();
 	if (existingStatus === "granted") return true;
-	const { status } = await Notifications.requestPermissionsAsync();
+	const { status } = await N.requestPermissionsAsync();
 	return status === "granted";
 }
 
@@ -28,6 +47,9 @@ export async function scheduleTaskNotifications(task: Task): Promise<{ atTimeId:
 
 	const hasPermission = await requestNotificationPermissions();
 	if (!hasPermission) return { atTimeId, dayBeforeId };
+
+	const N = await getNotifications();
+	if (!N) return { atTimeId, dayBeforeId };
 
 	const [year, month, day] = task.due_date.split("-").map(Number);
 	let hours = 9;
@@ -44,13 +66,13 @@ export async function scheduleTaskNotifications(task: Task): Promise<{ atTimeId:
 	if (shouldScheduleAtTime) {
 		const triggerDate = new Date(year, month - 1, day, hours, minutes, 0);
 		if (triggerDate.getTime() > Date.now()) {
-			atTimeId = await Notifications.scheduleNotificationAsync({
+			atTimeId = await N.scheduleNotificationAsync({
 				content: {
 					title: task.title,
 					body: "Due today",
 				},
 				trigger: {
-					type: Notifications.SchedulableTriggerInputTypes.DATE,
+					type: N.SchedulableTriggerInputTypes.DATE,
 					date: triggerDate,
 				},
 			});
@@ -60,13 +82,13 @@ export async function scheduleTaskNotifications(task: Task): Promise<{ atTimeId:
 	if (shouldScheduleDayBefore) {
 		const beforeDate = new Date(year, month - 1, day - 1, 9, 0, 0);
 		if (beforeDate.getTime() > Date.now()) {
-			dayBeforeId = await Notifications.scheduleNotificationAsync({
+			dayBeforeId = await N.scheduleNotificationAsync({
 				content: {
 					title: task.title,
 					body: "Due tomorrow",
 				},
 				trigger: {
-					type: Notifications.SchedulableTriggerInputTypes.DATE,
+					type: N.SchedulableTriggerInputTypes.DATE,
 					date: beforeDate,
 				},
 			});
@@ -80,14 +102,17 @@ export async function cancelTaskNotifications(
 	atTimeId: string | null | undefined,
 	dayBeforeId: string | null | undefined
 ): Promise<void> {
+	const N = await getNotifications();
+	if (!N) return;
+
 	if (atTimeId) {
 		try {
-			await Notifications.cancelScheduledNotificationAsync(atTimeId);
+			await N.cancelScheduledNotificationAsync(atTimeId);
 		} catch {}
 	}
 	if (dayBeforeId) {
 		try {
-			await Notifications.cancelScheduledNotificationAsync(dayBeforeId);
+			await N.cancelScheduledNotificationAsync(dayBeforeId);
 		} catch {}
 	}
 }

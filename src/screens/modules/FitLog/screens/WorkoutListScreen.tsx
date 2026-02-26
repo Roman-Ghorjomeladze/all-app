@@ -136,7 +136,7 @@ export default function WorkoutListScreen() {
 
 			{isEmpty ? (
 				<View style={styles.emptyContainer}>
-					<Text style={styles.emptyEmoji}>{"\u{1F3CB}\u{FE0F}"}</Text>
+					<Ionicons name="barbell-outline" size={56} color={colors.textSecondary} style={styles.emptyIcon} />
 					<Text style={styles.emptyText}>{t("fitNoWorkouts")}</Text>
 					<Text style={styles.emptyHint}>{t("fitNoWorkoutsHint")}</Text>
 				</View>
@@ -206,9 +206,9 @@ function useStyles(colors: Colors) {
 					paddingHorizontal: spacing.xl,
 					paddingTop: spacing.xl * 3,
 				},
-				emptyEmoji: {
-					fontSize: 64,
+				emptyIcon: {
 					marginBottom: spacing.md,
+					opacity: 0.5,
 				},
 				emptyText: {
 					...typography.body,

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	View,
 	Text,
@@ -38,6 +38,8 @@ import { scheduleTaskNotifications, cancelTaskNotifications, rescheduleTaskNotif
 import { updateTaskNotificationIds } from "../database";
 import { useColors, Colors, spacing, typography } from "../theme";
 import { useLanguage } from "../../../../i18n";
+import CalendarPicker from "../../../../components/CalendarPicker";
+import TimePicker from "../../../../components/TimePicker";
 import PrioritySelector from "../components/PrioritySelector";
 import RecurrenceSelector from "../components/RecurrenceSelector";
 import SubtaskItem from "../components/SubtaskItem";
@@ -85,6 +87,7 @@ export default function TaskFormScreen() {
 	const [showDatePicker, setShowDatePicker] = useState(false);
 	const [showTimePicker, setShowTimePicker] = useState(false);
 	const [originalTask, setOriginalTask] = useState<Task | null>(null);
+	const scrollViewRef = useRef<ScrollView>(null);
 
 	useEffect(() => {
 		const load = async () => {
@@ -234,7 +237,7 @@ export default function TaskFormScreen() {
 				</TouchableOpacity>
 			</View>
 
-			<ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
+			<ScrollView ref={scrollViewRef} contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
 				{/* Title */}
 				<Text style={styles.sectionLabel}>{t("tdTaskTitle")}</Text>
 				<TextInput
@@ -299,22 +302,35 @@ export default function TaskFormScreen() {
 						</TouchableOpacity>
 					)}
 				</View>
-				{showDatePicker && (
+				{showDatePicker && Platform.OS === "ios" && (
 					<>
-						{Platform.OS === "ios" && (
-							<View style={styles.pickerContainer}>
-								<TouchableOpacity onPress={() => setShowDatePicker(false)} activeOpacity={0.7}>
-									<Text style={styles.pickerDone}>{t("done")}</Text>
-								</TouchableOpacity>
-							</View>
-						)}
+						<View style={styles.pickerContainer}>
+							<TouchableOpacity onPress={() => setShowDatePicker(false)} activeOpacity={0.7}>
+								<Text style={styles.pickerDone}>{t("done")}</Text>
+							</TouchableOpacity>
+						</View>
 						<DateTimePicker
 							value={dueDate ? new Date(dueDate + "T00:00:00") : new Date()}
 							mode="date"
-							display={Platform.OS === "ios" ? "spinner" : "default"}
+							display="spinner"
 							onChange={handleDateChange}
 						/>
 					</>
+				)}
+				{Platform.OS === "android" && (
+					<CalendarPicker
+						visible={showDatePicker}
+						value={dueDate ? new Date(dueDate + "T00:00:00") : new Date()}
+						onSelect={(date) => {
+							const y = date.getFullYear();
+							const m = String(date.getMonth() + 1).padStart(2, "0");
+							const d = String(date.getDate()).padStart(2, "0");
+							setDueDate(`${y}-${m}-${d}`);
+							setShowDatePicker(false);
+						}}
+						onCancel={() => setShowDatePicker(false)}
+						accentColor={colors.accent}
+					/>
 				)}
 
 				{/* Due Time (only if date set) */}
@@ -338,22 +354,37 @@ export default function TaskFormScreen() {
 								</TouchableOpacity>
 							)}
 						</View>
-						{showTimePicker && (
+						{showTimePicker && Platform.OS === "ios" && (
 							<>
-								{Platform.OS === "ios" && (
-									<View style={styles.pickerContainer}>
-										<TouchableOpacity onPress={() => setShowTimePicker(false)} activeOpacity={0.7}>
-											<Text style={styles.pickerDone}>{t("done")}</Text>
-										</TouchableOpacity>
-									</View>
-								)}
+								<View style={styles.pickerContainer}>
+									<TouchableOpacity onPress={() => setShowTimePicker(false)} activeOpacity={0.7}>
+										<Text style={styles.pickerDone}>{t("done")}</Text>
+									</TouchableOpacity>
+								</View>
 								<DateTimePicker
 									value={dueTime ? new Date(`2000-01-01T${dueTime}:00`) : new Date()}
 									mode="time"
-									display={Platform.OS === "ios" ? "spinner" : "default"}
+									display="spinner"
 									onChange={handleTimeChange}
 								/>
 							</>
+						)}
+						{Platform.OS === "android" && (
+							<TimePicker
+								visible={showTimePicker}
+								value={{
+									hour: dueTime ? parseInt(dueTime.split(":")[0], 10) : new Date().getHours(),
+									minute: dueTime ? parseInt(dueTime.split(":")[1], 10) : new Date().getMinutes(),
+								}}
+								onSelect={(hour, minute) => {
+									const h = String(hour).padStart(2, "0");
+									const m = String(minute).padStart(2, "0");
+									setDueTime(`${h}:${m}`);
+									setShowTimePicker(false);
+								}}
+								onCancel={() => setShowTimePicker(false)}
+								accentColor={colors.accent}
+							/>
 						)}
 					</>
 				)}
@@ -427,6 +458,11 @@ export default function TaskFormScreen() {
 								placeholderTextColor={colors.textSecondary}
 								returnKeyType="done"
 								onSubmitEditing={handleAddSubtask}
+								onFocus={() => {
+									setTimeout(() => {
+										scrollViewRef.current?.scrollToEnd({ animated: true });
+									}, 300);
+								}}
 							/>
 							<TouchableOpacity onPress={handleAddSubtask} activeOpacity={0.7} disabled={!newSubtask.trim()}>
 								<Ionicons name="add-circle" size={28} color={newSubtask.trim() ? colors.accent : colors.textSecondary} />

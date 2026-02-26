@@ -1,7 +1,7 @@
-import React, { useMemo } from "react";
-import { Text, View, StyleSheet } from "react-native";
+import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Ionicons } from "@expo/vector-icons";
 import {
 	LinguaFlipStackParamList,
 	LinguaFlipTabParamList,
@@ -14,24 +14,17 @@ import QuizStartScreen from "./screens/QuizStartScreen";
 import QuizPlayScreen from "./screens/QuizPlayScreen";
 import QuizResultScreen from "./screens/QuizResultScreen";
 import MistakesScreen from "./screens/MistakesScreen";
-import { useColors, Colors } from "./theme";
+import { useColors } from "./theme";
 import { useLanguage } from "./i18n";
+import { useIconMode } from "../../../settings";
+import AnimatedTabBar from "../../../components/AnimatedTabBar";
 
 const Stack = createNativeStackNavigator<LinguaFlipStackParamList>();
 const Tab = createBottomTabNavigator<LinguaFlipTabParamList>();
 const QuizStack = createNativeStackNavigator<LLQuizStackParamList>();
 
-type TabIconProps = {
-	focused: boolean;
-	icon: string;
-};
-
-function TabIcon({ focused, icon }: TabIconProps) {
-	return (
-		<View style={layoutStyles.iconContainer}>
-			<Text style={[layoutStyles.icon, focused && layoutStyles.iconFocused]}>{icon}</Text>
-		</View>
-	);
+function TabIcon({ name, color, focused }: { name: keyof typeof Ionicons.glyphMap; color: string; focused: boolean }) {
+	return <Ionicons name={name} size={24} color={color} style={{ opacity: focused ? 1 : 0.6 }} />;
 }
 
 type QuizStackProps = {
@@ -61,7 +54,7 @@ type TabsProps = {
 function TabNavigator({ route }: TabsProps) {
 	const { t } = useLanguage();
 	const colors = useColors();
-	const styles = useStyles(colors);
+	const { iconMode } = useIconMode();
 	const projectId = route.params?.projectId;
 
 	return (
@@ -70,18 +63,16 @@ function TabNavigator({ route }: TabsProps) {
 				tabBarActiveTintColor: colors.tabActive,
 				tabBarInactiveTintColor: colors.tabInactive,
 				headerShown: false,
-				tabBarStyle: styles.tabBar,
-				tabBarLabelStyle: layoutStyles.tabLabel,
 			}}
+			tabBar={(props) => <AnimatedTabBar {...props} colors={colors} iconMode={iconMode} />}
 		>
 			<Tab.Screen
 				name="LLReview"
 				component={ReviewScreen}
 				initialParams={{ projectId }}
 				options={{
-					title: t("llReview"),
 					tabBarLabel: t("llReview"),
-					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon={"\u{1F4DA}"} />,
+					tabBarIcon: ({ focused, color }) => <TabIcon name="book-outline" color={color} focused={focused} />,
 				}}
 			/>
 			<Tab.Screen
@@ -89,9 +80,8 @@ function TabNavigator({ route }: TabsProps) {
 				component={QuizStackNavigator}
 				initialParams={{ projectId }}
 				options={{
-					title: t("llQuiz"),
 					tabBarLabel: t("llQuiz"),
-					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon={"\u{1F9E0}"} />,
+					tabBarIcon: ({ focused, color }) => <TabIcon name="school-outline" color={color} focused={focused} />,
 				}}
 			/>
 			<Tab.Screen
@@ -99,9 +89,8 @@ function TabNavigator({ route }: TabsProps) {
 				component={MistakesScreen}
 				initialParams={{ projectId }}
 				options={{
-					title: t("llMistakes"),
 					tabBarLabel: t("llMistakes"),
-					tabBarIcon: ({ focused }) => <TabIcon focused={focused} icon={"\u{1F4DD}"} />,
+					tabBarIcon: ({ focused, color }) => <TabIcon name="document-text-outline" color={color} focused={focused} />,
 				}}
 			/>
 		</Tab.Navigator>
@@ -132,32 +121,3 @@ export default function LinguaFlipNavigator() {
 	);
 }
 
-function useStyles(colors: Colors) {
-	return useMemo(() => StyleSheet.create({
-		tabBar: {
-			backgroundColor: colors.cardBackground,
-			borderTopColor: colors.border,
-			borderTopWidth: 0.5,
-			paddingTop: 8,
-			height: 88,
-		},
-	}), [colors]);
-}
-
-const layoutStyles = StyleSheet.create({
-	tabLabel: {
-		fontSize: 12,
-		fontWeight: "500",
-	},
-	iconContainer: {
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	icon: {
-		fontSize: 24,
-		opacity: 0.6,
-	},
-	iconFocused: {
-		opacity: 1,
-	},
-});

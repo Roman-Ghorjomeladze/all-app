@@ -104,7 +104,7 @@ export default function ExpenseListScreen() {
 				{/* Expense List */}
 				{expenses.length === 0 ? (
 					<View style={styles.emptyContainer}>
-						<Text style={styles.emptyEmoji}>{"\u{1F4B3}"}</Text>
+						<Ionicons name="wallet-outline" size={56} color={colors.textSecondary} style={styles.emptyIcon} />
 						<Text style={styles.emptyText}>{t("pmNoExpenses")}</Text>
 					</View>
 				) : (
@@ -178,9 +178,9 @@ function useStyles(colors: Colors) {
 					paddingHorizontal: spacing.xl,
 					paddingTop: spacing.xl * 3,
 				},
-				emptyEmoji: {
-					fontSize: 64,
+				emptyIcon: {
 					marginBottom: spacing.md,
+					opacity: 0.5,
 				},
 				emptyText: {
 					...typography.body,

@@ -32,6 +32,7 @@ import {
 } from "../database";
 import { useColors, Colors, spacing, typography } from "../theme";
 import { useLanguage } from "../../../../i18n";
+import CalendarPicker from "../../../../components/CalendarPicker";
 import AmountInput from "../components/AmountInput";
 import CategoryPicker from "../components/CategoryPicker";
 import ProjectPicker from "../components/ProjectPicker";
@@ -209,22 +210,32 @@ export default function ExpenseFormScreen() {
 					<Ionicons name="calendar-outline" size={20} color={colors.accent} />
 					<Text style={styles.dateButtonText}>{formatDate(date)}</Text>
 				</TouchableOpacity>
-				{showDatePicker && (
+				{showDatePicker && Platform.OS === "ios" && (
 					<>
-						{Platform.OS === "ios" && (
-							<View style={styles.pickerContainer}>
-								<TouchableOpacity onPress={() => setShowDatePicker(false)} activeOpacity={0.7}>
-									<Text style={styles.pickerDone}>{t("done")}</Text>
-								</TouchableOpacity>
-							</View>
-						)}
+						<View style={styles.pickerContainer}>
+							<TouchableOpacity onPress={() => setShowDatePicker(false)} activeOpacity={0.7}>
+								<Text style={styles.pickerDone}>{t("done")}</Text>
+							</TouchableOpacity>
+						</View>
 						<DateTimePicker
 							value={date}
 							mode="date"
-							display={Platform.OS === "ios" ? "spinner" : "default"}
+							display="spinner"
 							onChange={handleDateChange}
 						/>
 					</>
+				)}
+				{Platform.OS === "android" && (
+					<CalendarPicker
+						visible={showDatePicker}
+						value={date}
+						onSelect={(selectedDate) => {
+							setDate(selectedDate);
+							setShowDatePicker(false);
+						}}
+						onCancel={() => setShowDatePicker(false)}
+						accentColor={colors.accent}
+					/>
 				)}
 
 				{/* Project */}

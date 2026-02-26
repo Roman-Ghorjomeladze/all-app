@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { PocketManagerStackParamList } from "../../../../types/navigation";
@@ -156,7 +157,7 @@ export default function DashboardScreen() {
 			{/* Empty state */}
 			{breakdown.length === 0 && projects.length === 0 && (
 				<View style={styles.emptyContainer}>
-					<Text style={styles.emptyEmoji}>{"\u{1F4B0}"}</Text>
+					<Ionicons name="wallet-outline" size={56} color={colors.textSecondary} style={styles.emptyIcon} />
 					<Text style={styles.emptyText}>{t("pmNoExpenses")}</Text>
 					<Text style={styles.emptyHint}>{t("pmNoExpensesHint")}</Text>
 				</View>
@@ -272,9 +273,9 @@ function useStyles(colors: Colors) {
 					paddingTop: spacing.xl * 3,
 					paddingHorizontal: spacing.xl,
 				},
-				emptyEmoji: {
-					fontSize: 64,
+				emptyIcon: {
 					marginBottom: spacing.md,
+					opacity: 0.5,
 				},
 				emptyText: {
 					...typography.body,

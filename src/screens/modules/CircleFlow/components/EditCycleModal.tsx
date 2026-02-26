@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Platform, Pressable, ScrollView } from "react-native";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import CalendarPicker from "../../../../components/CalendarPicker";
 import { useColors, Colors, spacing } from "../theme";
 import { Cycle } from "../database";
 import { useLanguage } from "../../../../i18n";
@@ -213,26 +214,38 @@ export default function EditCycleModal({ visible, cycle, onClose, onSave }: Edit
 								</TouchableOpacity>
 							</View>
 
-							{showStartPicker && (
+							{showStartPicker && Platform.OS === "ios" && (
 								<View style={styles.pickerContainer}>
 									<DateTimePicker
 										value={startDate}
 										mode="date"
-										display={Platform.OS === "ios" ? "spinner" : "default"}
+										display="spinner"
 										onChange={handleStartDateChange}
 										maximumDate={new Date()}
 										themeVariant="light"
 										textColor={colors.textPrimary}
 									/>
-									{Platform.OS === "ios" && (
-										<TouchableOpacity
-											style={styles.pickerDoneButton}
-											onPress={() => setShowStartPicker(false)}
-										>
-											<Text style={styles.pickerDoneText}>{t("done")}</Text>
-										</TouchableOpacity>
-									)}
+									<TouchableOpacity
+										style={styles.pickerDoneButton}
+										onPress={() => setShowStartPicker(false)}
+									>
+										<Text style={styles.pickerDoneText}>{t("done")}</Text>
+									</TouchableOpacity>
 								</View>
+							)}
+							{Platform.OS === "android" && (
+								<CalendarPicker
+									visible={showStartPicker}
+									value={startDate}
+									onSelect={(selectedDate) => {
+										setStartDate(selectedDate);
+										if (endDate && selectedDate > endDate) setEndDate(selectedDate);
+										setShowStartPicker(false);
+									}}
+									onCancel={() => setShowStartPicker(false)}
+									accentColor={colors.period}
+									maximumDate={new Date()}
+								/>
 							)}
 
 							{/* End Date */}
@@ -256,27 +269,39 @@ export default function EditCycleModal({ visible, cycle, onClose, onSave }: Edit
 								</View>
 							</View>
 
-							{showEndPicker && (
+							{showEndPicker && Platform.OS === "ios" && (
 								<View style={styles.pickerContainer}>
 									<DateTimePicker
 										value={endDate || startDate}
 										mode="date"
-										display={Platform.OS === "ios" ? "spinner" : "default"}
+										display="spinner"
 										onChange={handleEndDateChange}
 										minimumDate={startDate}
 										maximumDate={new Date()}
 										themeVariant="light"
 										textColor={colors.textPrimary}
 									/>
-									{Platform.OS === "ios" && (
-										<TouchableOpacity
-											style={styles.pickerDoneButton}
-											onPress={() => setShowEndPicker(false)}
-										>
-											<Text style={styles.pickerDoneText}>{t("done")}</Text>
-										</TouchableOpacity>
-									)}
+									<TouchableOpacity
+										style={styles.pickerDoneButton}
+										onPress={() => setShowEndPicker(false)}
+									>
+										<Text style={styles.pickerDoneText}>{t("done")}</Text>
+									</TouchableOpacity>
 								</View>
+							)}
+							{Platform.OS === "android" && (
+								<CalendarPicker
+									visible={showEndPicker}
+									value={endDate || startDate}
+									onSelect={(selectedDate) => {
+										setEndDate(selectedDate);
+										setShowEndPicker(false);
+									}}
+									onCancel={() => setShowEndPicker(false)}
+									accentColor={colors.period}
+									minimumDate={startDate}
+									maximumDate={new Date()}
+								/>
 							)}
 						</View>
 

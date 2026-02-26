@@ -6,6 +6,7 @@ import {
 	StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import {
 	initDatabase,
@@ -90,7 +91,7 @@ export default function StatsScreen() {
 
 			{!hasStats ? (
 				<View style={styles.emptyContainer}>
-					<Text style={styles.emptyEmoji}>{"\u{1F4CA}"}</Text>
+					<Ionicons name="stats-chart-outline" size={56} color={colors.textSecondary} style={styles.emptyIcon} />
 					<Text style={styles.emptyText}>{t("fitNoStats")}</Text>
 				</View>
 			) : (
@@ -176,9 +177,9 @@ function useStyles(colors: Colors) {
 					paddingHorizontal: spacing.xl,
 					paddingTop: spacing.xl * 3,
 				},
-				emptyEmoji: {
-					fontSize: 64,
+				emptyIcon: {
 					marginBottom: spacing.md,
+					opacity: 0.5,
 				},
 				emptyText: {
 					...typography.body,

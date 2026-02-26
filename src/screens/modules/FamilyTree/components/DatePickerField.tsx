@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Platform, Modal } from "react-native";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import CalendarPicker from "../../../../components/CalendarPicker";
 import { useColors, Colors, spacing } from "../theme";
 
 type DatePickerFieldProps = {
@@ -171,12 +172,16 @@ export default function DatePickerField({ label, value, onChange, placeholder }:
 				</Modal>
 			)}
 
-			{showPicker && Platform.OS === "android" && (
-				<DateTimePicker
+			{Platform.OS === "android" && (
+				<CalendarPicker
+					visible={showPicker}
 					value={dateValue}
-					mode="date"
-					display="default"
-					onChange={handleDateChange}
+					onSelect={(date) => {
+						onChange(formatDateForDB(date));
+						setShowPicker(false);
+					}}
+					onCancel={() => setShowPicker(false)}
+					accentColor={colors.accent}
 				/>
 			)}
 		</View>
